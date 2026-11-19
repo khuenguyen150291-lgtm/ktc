@@ -4,56 +4,110 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>KTC – Quản lý</title>
-<meta name="theme-color" content="#14365c">
+<meta name="theme-color" content="#1f2329">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
-:root{--nen:#f4f6f9;--the:#fff;--chu:#1b2430;--phu:#5b6675;--vien:#dde3ea;--chinh:#14365c;--nhan:#e8a33d;--xanh:#1f8a4c;--do:#c0392b;--vang:#b7791f}
-@media (prefers-color-scheme:dark){:root{--nen:#10161e;--the:#18212c;--chu:#e6ebf1;--phu:#9aa6b4;--vien:#2a3644;--chinh:#7fb0e6}}
-*{box-sizing:border-box}html,body{margin:0;background:var(--nen);color:var(--chu);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{position:sticky;top:0;z-index:5;background:var(--chinh);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top))}
-header b{font-size:16px;letter-spacing:.3px}header .sp{flex:1}
-.av{width:32px;height:32px;border-radius:50%;background:var(--nhan);color:#14365c;display:grid;place-items:center;font-weight:700;font-size:13px;overflow:hidden;flex:none}
-.av img{width:100%;height:100%;object-fit:cover}
-nav{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;background:var(--the);border-bottom:1px solid var(--vien);position:sticky;top:52px;z-index:4}
-nav a{white-space:nowrap;padding:6px 12px;border-radius:16px;color:var(--phu);text-decoration:none;font-size:14px}
-nav a.on{background:var(--chinh);color:#fff}
-main{max-width:980px;margin:0 auto;padding:14px 16px 90px}
-.the{background:var(--the);border:1px solid var(--vien);border-radius:10px;padding:14px;margin-bottom:12px}
-.luoi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.so{font-size:20px;font-weight:700}.nho{font-size:12.5px;color:var(--phu)}
-h2{font-size:17px;margin:4px 0 10px}h3{font-size:15px;margin:12px 0 6px}
-table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:7px 6px;border-bottom:1px solid var(--vien);text-align:left;vertical-align:top}
-th{color:var(--phu);font-weight:600;font-size:12.5px}td.r,th.r{text-align:right;white-space:nowrap}
-.cuon{overflow-x:auto}
-.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;border:1px solid var(--vien)}
-.t-xong{color:var(--xanh);border-color:var(--xanh)}.t-dang{color:var(--vang);border-color:var(--vang)}.t-huy{color:var(--do);border-color:var(--do)}
-input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--vien);border-radius:8px;background:var(--the);color:var(--chu);font:inherit}
-label{display:block;font-size:13px;color:var(--phu);margin:8px 0 3px}
-button{font:inherit;border:0;border-radius:8px;padding:9px 14px;background:var(--chinh);color:#fff;cursor:pointer}
-button.phu{background:transparent;color:var(--chinh);border:1px solid var(--vien)}button:disabled{opacity:.5}
-.hang{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.hang>*{flex:1}
-.dong{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--vien);cursor:pointer}.dong:last-child{border:0}
-.canh{background:#fff6e6;color:#7a4b00;border:1px solid #f0d29a;border-radius:8px;padding:8px 10px;font-size:13px;margin:6px 0}
-@media (prefers-color-scheme:dark){.canh{background:#3a2c10;color:#f3d79c;border-color:#5a4520}}
-#dangnhap{max-width:380px;margin:12vh auto;text-align:center}
-#thongbao{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:9px 14px;border-radius:8px;font-size:14px;display:none;z-index:9;max-width:90vw}
+:root{--nen:#f3f4f6;--the:#fff;--chu:#1a1d21;--phu:#667085;--vien:#e4e7ec;--toi:#1f2329;--toi2:#2a2f37;--vang:#f6c700;--vangnhat:#fff7d1;--do:#e31e24;--xanh:#12805c;--xanhnhat:#e7f6ef;--donhat:#fdecec;--camnhat:#fff4e5;--cam:#b54708;--bong:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08)}
+*{box-sizing:border-box}html,body{margin:0;background:var(--nen);color:var(--chu);font:14.5px/1.5 "Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}button,input,select,textarea{font:inherit}
+.so,td.r,.r{font-variant-numeric:tabular-nums}
+svg.ic{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* khung */
+#ben{position:fixed;inset:0 auto 0 0;width:240px;background:var(--toi);color:#d0d5dd;display:flex;flex-direction:column;z-index:6}
+#ben .thuong{display:flex;align-items:center;gap:10px;padding:18px 18px 14px}
+#ben .thuong img{width:38px;height:38px;border-radius:8px;background:#fff;padding:3px}
+#ben .thuong b{color:#fff;font-size:15px;line-height:1.2}#ben .thuong small{display:block;color:#98a2b3;font-size:11.5px;font-weight:400}
+#menu{flex:1;overflow:auto;padding:6px 10px}
+#menu a{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:8px;text-decoration:none;color:#d0d5dd;font-weight:500;margin-bottom:2px}
+#menu a:hover{background:var(--toi2);color:#fff}
+#menu a.on{background:var(--vang);color:var(--toi)}
+#ben .nguoi{display:flex;align-items:center;gap:10px;padding:14px 16px;border-top:1px solid #343a44}
+#ben .nguoi .ten{color:#fff;font-weight:600;font-size:13.5px;line-height:1.2}#ben .nguoi small{color:#98a2b3;font-size:12px}
+.av{width:34px;height:34px;border-radius:50%;background:var(--vang);color:var(--toi);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+#dau{display:none}
+main{margin-left:240px;padding:26px 32px 48px;max-width:1320px}
+.tieude{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.tieude h1{font-size:22px;margin:0;font-weight:700;letter-spacing:-.2px}.tieude p{margin:2px 0 0;color:var(--phu);font-size:13px}
+#duoi{display:none}
+/* thành phần */
+.the{background:var(--the);border:1px solid var(--vien);border-radius:12px;box-shadow:var(--bong);padding:18px;margin-bottom:16px}
+.the h3{margin:0 0 12px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.luoi{display:grid;gap:14px;grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}
+.kpi{background:var(--the);border:1px solid var(--vien);border-radius:12px;box-shadow:var(--bong);padding:16px 18px;position:relative;overflow:hidden;text-decoration:none;display:block}
+.kpi:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--vang)}
+.kpi .nhan{color:var(--phu);font-size:12.5px;font-weight:500;display:flex;align-items:center;gap:6px}
+.kpi .so{font-size:24px;font-weight:700;margin-top:6px;letter-spacing:-.3px}.kpi .them{font-size:12px;color:var(--phu);margin-top:2px}
+.kpi.xanh:before{background:var(--xanh)}.kpi.do:before{background:var(--do)}.kpi.toi:before{background:var(--toi)}
+.hai{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+.bang{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px}
+.bang th{background:#f9fafb;color:var(--phu);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.3px;text-align:left;padding:9px 12px;border-bottom:1px solid var(--vien);position:sticky;top:0}
+.bang td{padding:10px 12px;border-bottom:1px solid #f0f2f5;vertical-align:top}
+.bang tr:hover td{background:#fcfcfd}.bang td.r,.bang th.r{text-align:right;white-space:nowrap}
+.cuon{overflow:auto;max-height:70vh;border:1px solid var(--vien);border-radius:10px}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.t-xong{background:var(--xanhnhat);color:var(--xanh)}.t-dang{background:var(--camnhat);color:var(--cam)}.t-huy{background:var(--donhat);color:#b42318}.t-xam{background:#f2f4f7;color:#475467}
+.dong{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 4px;border-bottom:1px solid #f0f2f5;cursor:pointer}.dong:last-child{border:0}
+.dong:hover{background:#fcfcfd}.dong .chinh{min-width:0}.dong .chinh b{font-weight:600}.nho{font-size:12.5px;color:var(--phu)}
+.ma{font-size:11.5px;color:var(--phu);font-weight:600;letter-spacing:.2px}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid #d0d5dd;border-radius:8px;background:#fff;color:var(--chu);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--vang);box-shadow:0 0 0 3px rgba(246,199,0,.25)}
+label{display:block;font-size:12.5px;color:var(--phu);font-weight:500;margin:10px 0 4px}
+.nut{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;border:0;border-radius:8px;padding:9px 16px;background:var(--toi);color:#fff;font-weight:600;cursor:pointer}
+.nut.vang{background:var(--vang);color:var(--toi)}.nut.phu{background:#fff;color:var(--chu);border:1px solid #d0d5dd}.nut:disabled{opacity:.5}
+.hang{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}.hang>*{flex:1;min-width:140px}.hang>.nut,.hang>.tab,.hang>.tag{flex:none;min-width:0}.tab button{white-space:nowrap}
+.canh{display:flex;gap:10px;background:var(--camnhat);color:#7a2e0e;border:1px solid #fedf89;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.rong{color:var(--phu);text-align:center;padding:24px 8px}
+.bieu{width:100%;height:auto}.bieu text{font-size:11px;fill:var(--phu)}
+.chu-giai{display:flex;gap:14px;font-size:12.5px;color:var(--phu)}.chu-giai i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tab{display:inline-flex;background:#f2f4f7;border-radius:9px;padding:3px;gap:2px}.tab button{border:0;background:none;padding:6px 12px;border-radius:7px;font-weight:600;color:var(--phu);cursor:pointer}.tab button.on{background:#fff;color:var(--chu);box-shadow:var(--bong)}
+#dangnhap{max-width:420px;margin:12vh auto;text-align:center}
+#dangnhap img{width:96px;height:96px}
+#thongbao{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--toi);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;display:none;z-index:20;max-width:90vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .an{display:none!important}
+/* điện thoại */
+@media (max-width:900px){
+  #ben{display:none}
+  #dau{display:flex;position:sticky;top:0;z-index:5;align-items:center;gap:10px;background:var(--toi);color:#fff;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top))}
+  #dau img{width:32px;height:32px;border-radius:7px;background:#fff;padding:2px}#dau b{flex:1;font-size:15px}
+  main{margin:0;padding:16px 16px calc(84px + env(safe-area-inset-bottom))}
+  .luoi{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.kpi{padding:13px 14px}.kpi .so{font-size:19px}
+  .hai{grid-template-columns:1fr}
+  .tieude h1{font-size:19px}
+  #duoi{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:6;background:#fff;border-top:1px solid var(--vien);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  #duoi a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--phu);text-decoration:none;font-weight:600;padding:4px 0;border-radius:8px}
+  #duoi a.on{color:var(--toi)}#duoi a.on svg{color:var(--do)}
+  .bang.co-the thead{display:none}.bang.co-the tr{display:block;border-bottom:1px solid var(--vien);padding:8px 4px}.bang.co-the td{display:flex;justify-content:space-between;gap:10px;border:0;padding:3px 8px}
+  .bang.co-the td:before{content:attr(data-n);color:var(--phu);font-size:12px;flex:none}.bang.co-the td{text-align:right}.bang.co-the td:empty{display:none}
+  .cuon{max-height:none;border:0}
+}
+#sheet{position:fixed;inset:0;background:rgba(16,24,40,.45);z-index:15;display:none;align-items:flex-end}
+#sheet>div{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
+#sheet a{display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:10px;text-decoration:none;font-weight:600}
 </style>
 </head>
 <body>
-<header><div class="av" id="logo">KTC</div><b>Kiến Thành Công</b><span class="sp"></span><span class="nho" id="tenNguoi" style="color:#dfe7f1"></span><div class="av an" id="avNguoi"></div></header>
-<nav id="menu" class="an"></nav>
+<aside id="ben" class="an">
+  <div class="thuong"><img src="logo.png" alt="KTC"><div><b>Kiến Thành Công</b><small>Hệ thống quản lý</small></div></div>
+  <nav id="menu"></nav>
+  <div class="nguoi"><div class="av" id="avNguoi"></div><div><div class="ten" id="tenNguoi"></div><small id="chucNguoi"></small></div></div>
+</aside>
+<header id="dau" class="an"><img src="logo.png" alt="KTC"><b>Kiến Thành Công</b><div class="av" id="avNguoi2"></div></header>
 <main id="noidung">
   <div id="dangnhap" class="the">
-    <h2>Đăng nhập</h2>
-    <p class="nho">Chỉ các Gmail đã được cấp quyền mới vào được.</p>
-    <div id="nutGoogle" style="display:flex;justify-content:center;margin:16px 0"></div>
-    <p class="nho" id="loiDN"></p>
+    <img src="logo.png" alt="Kiến Thành Công">
+    <h2 style="margin:10px 0 4px">Kiến Thành Công</h2>
+    <p class="nho">Hệ thống quản lý nội bộ. Chỉ Gmail đã được cấp quyền mới vào được.</p>
+    <div id="nutGoogle" style="display:flex;justify-content:center;margin:18px 0 6px"></div>
+    <p class="nho" id="loiDN" style="color:#b42318"></p>
   </div>
 </main>
+<nav id="duoi" class="an"></nav>
+<div id="sheet" onclick="if(event.target===this)this.style.display='none'"><div id="sheetND"></div></div>
 <div id="thongbao"></div>
 <script>
 'use strict';
@@ -62,31 +116,48 @@ const CLIENT_ID = '419003041557-9t0fo8dapliq3fn64a7t1g7tv5efm5ap.apps.googleuser
 let TOKEN = null, ME = null, CACHE = {};
 const $ = s => document.querySelector(s);
 const vnd = n => (Math.round(+n || 0)).toLocaleString('vi-VN');
+const trieu = n => { n = +n || 0; const a = Math.abs(n); return a >= 1e9 ? (n / 1e9).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + ' tỷ' : a >= 1e6 ? (n / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' tr' : vnd(n); };
 const ngay = s => s ? s.split('-').reverse().join('/') : '';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const viet = s => esc(s).split(' ').filter(Boolean);
-const tat = ten => { const w = viet(ten); return ((w[w.length-1]||'?')[0] || '?').toUpperCase(); };
+const tat = ten => { const w = String(ten || '?').trim().split(/\s+/); return (w[w.length - 1][0] || '?').toUpperCase(); };
 function bao(t, ms) { const e = $('#thongbao'); e.textContent = t; e.style.display = 'block'; clearTimeout(bao.t); bao.t = setTimeout(() => e.style.display = 'none', ms || 3000); }
-function tag(tt) { const c = tt === 'Đã xong' ? 't-xong' : tt === 'Hủy' ? 't-huy' : 't-dang'; return `<span class="tag ${c}">${esc(tt||'')}</span>`; }
+function tag(tt) { const c = tt === 'Đã xong' ? 't-xong' : tt === 'Hủy' ? 't-huy' : 't-dang'; return `<span class="tag ${c}">${esc(tt || '')}</span>`; }
+
+/* ---------- biểu tượng ---------- */
+const IC = {
+  nha: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  ct: '<path d="M3 21h18"/><path d="M5 21V8l7-4 7 4v13"/><path d="M9 21v-5h6v5"/><path d="M9 11h.01M15 11h.01"/>',
+  tc: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M16 15h2"/>',
+  no: '<path d="M7 4h10l3 4v12H4V8z"/><path d="M8 13h8M8 17h5"/>',
+  vp: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h6M9 11h6M9 15h3"/>',
+  duyet: '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>',
+  db: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 20a6.5 6.5 0 0 0-3-5.5"/>',
+  hs: '<path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+  cd: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  them: '<circle cx="12" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  len: '<path d="M7 17L17 7M9 7h8v8"/>', xuong: '<path d="M7 7l10 10M17 9v8H9"/>', mo: '<path d="M14 3h7v7"/><path d="M10 14L21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>',
+  canh: '<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>'
+};
+const ic = (k, st) => `<svg class="ic" viewBox="0 0 24 24"${st ? ` style="${st}"` : ''}>${IC[k]}</svg>`;
 
 /* ---------- đăng nhập Google ---------- */
 function khoiDong() {
   if (!window.google || !google.accounts) return setTimeout(khoiDong, 300);
   google.accounts.id.initialize({ client_id: CLIENT_ID, callback: r => vaoApp(r.credential), auto_select: true, cancel_on_tap_outside: false });
-  google.accounts.id.renderButton($('#nutGoogle'), { theme: 'filled_blue', size: 'large', text: 'signin_with', locale: 'vi' });
+  google.accounts.id.renderButton($('#nutGoogle'), { theme: 'outline', size: 'large', text: 'signin_with', locale: 'vi', shape: 'pill' });
   google.accounts.id.prompt();
 }
 async function vaoApp(cred) {
   TOKEN = cred;
   try {
     ME = await goi('me');
-    $('#tenNguoi').textContent = ME.ten;
-    const av = $('#avNguoi'); av.textContent = tat(ME.ten); av.classList.remove('an');
+    $('#tenNguoi').textContent = ME.ten; $('#chucNguoi').textContent = ME.chuc || '';
+    $('#avNguoi').textContent = $('#avNguoi2').textContent = tat(ME.ten);
+    ['#ben', '#dau', '#duoi'].forEach(s => $(s).classList.remove('an'));
     dungMenu(); window.onhashchange = dinhTuyen; dinhTuyen();
   } catch (e) { $('#loiDN').textContent = e.message; }
 }
 async function goi(action, payload) {
-  if (API_URL.startsWith('DAN_')) throw new Error('App chưa được nối với máy xử lý (thiếu địa chỉ Web app).');
   const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ token: TOKEN, action, payload: payload || {} }) });
   const j = await r.json();
   if (!j.ok) {
@@ -98,105 +169,149 @@ async function goi(action, payload) {
 
 /* ---------- menu theo quyền ---------- */
 const MUC = [
-  ['#/', 'Trang chủ', () => true],
-  ['#/cong-trinh', 'Công trình', q => q.congtrinh],
-  ['#/thu-chi', 'Thu chi', q => q.thuchi],
-  ['#/cong-no', 'Công nợ', q => q.congno],
-  ['#/van-phong', 'Văn phòng', q => q.vanphong],
-  ['#/cho-duyet', 'Chờ duyệt', q => q.choduyet],
-  ['#/danh-ba', 'Danh bạ', q => q.danhba],
-  ['#/he-so', 'Hệ số', q => q.heso],
-  ['#/cai-dat', 'Cài đặt', q => q.caidat]
+  ['#/', 'Tổng quan', 'nha', () => true, 1],
+  ['#/cong-trinh', 'Công trình', 'ct', q => q.congtrinh, 1],
+  ['#/thu-chi', 'Thu chi', 'tc', q => q.thuchi, 1],
+  ['#/cong-no', 'Công nợ', 'no', q => q.congno, 0],
+  ['#/van-phong', 'Văn phòng', 'vp', q => q.vanphong, 1],
+  ['#/cho-duyet', 'Chờ duyệt', 'duyet', q => q.choduyet, 0],
+  ['#/danh-ba', 'Danh bạ', 'db', q => q.danhba, 0],
+  ['#/he-so', 'Hệ số', 'hs', q => q.heso, 0],
+  ['#/cai-dat', 'Cài đặt', 'cd', q => q.caidat, 0]
 ];
 function dungMenu() {
-  const m = $('#menu'); m.classList.remove('an');
-  m.innerHTML = MUC.filter(x => x[2](ME.quyen)).map(x => `<a href="${x[0]}">${x[1]}</a>`).join('');
+  const ds = MUC.filter(x => x[3](ME.quyen));
+  $('#menu').innerHTML = ds.map(x => `<a href="${x[0]}">${ic(x[2])}<span>${x[1]}</span></a>`).join('');
+  const chinh = ds.filter(x => x[4]).slice(0, 4), phu = ds.filter(x => !chinh.includes(x));
+  $('#duoi').innerHTML = chinh.map(x => `<a href="${x[0]}">${ic(x[2])}<span>${x[1]}</span></a>`).join('') +
+    (phu.length ? `<a href="javascript:void 0" onclick="moThem()">${ic('them')}<span>Thêm</span></a>` : '');
+  $('#sheetND').innerHTML = phu.map(x => `<a href="${x[0]}" onclick="$('#sheet').style.display='none'">${ic(x[2])}${x[1]}</a>`).join('');
 }
+function moThem() { $('#sheet').style.display = 'flex'; }
 const TRANG = {};
+function tieuDe(t, phu, nut) { return `<div class="tieude"><div><h1>${t}</h1>${phu ? `<p>${phu}</p>` : ''}</div>${nut || ''}</div>`; }
 async function dinhTuyen() {
   const h = location.hash || '#/'; const [duong, tham] = h.split('?');
-  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === duong));
-  const nd = $('#noidung'); nd.innerHTML = '<div class="the nho">Đang tải…</div>';
+  const goc = duong === '#/ct' ? '#/cong-trinh' : duong;
+  document.querySelectorAll('#menu a,#duoi a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === goc));
+  const nd = $('#noidung'); nd.innerHTML = '<div class="the rong">Đang tải…</div>';
+  window.scrollTo(0, 0);
   try { await (TRANG[duong] || TRANG['#/'])(nd, new URLSearchParams(tham || '')); }
-  catch (e) { nd.innerHTML = `<div class="the canh">${esc(e.message)}</div>`; }
+  catch (e) { nd.innerHTML = `<div class="canh">${ic('canh')}<span>${esc(e.message)}</span></div>`; }
 }
 
-/* ---------- Trang chủ ---------- */
+/* ---------- biểu đồ cột thu – chi theo tháng (SVG) ---------- */
+function bieuDoThang(thu, chi) {
+  const nam = new Date().getFullYear(), T = Array.from({ length: 12 }, (_, i) => ({ t: i + 1, thu: 0, chi: 0 }));
+  thu.forEach(x => { if ((x.ngay || '').startsWith(nam)) T[+x.ngay.slice(5, 7) - 1].thu += x.tien; });
+  chi.forEach(x => { if ((x.ngay || '').startsWith(nam)) T[+x.ngay.slice(5, 7) - 1].chi += x.tien; });
+  const max = Math.max(1, ...T.map(x => Math.max(x.thu, x.chi)));
+  const dt = innerWidth < 900, W = dt ? 360 : 640, H = dt ? 200 : 220, l = dt ? 34 : 44, b = 24, cw = (W - l - 8) / 12, bw = Math.min(14, cw / 3.2);
+  const buoc = Math.pow(10, Math.floor(Math.log10(max))), dinh = Math.ceil(max / buoc) * buoc;
+  let s = `<svg class="bieu" viewBox="0 0 ${W} ${H}" role="img" aria-label="Thu chi theo tháng năm ${nam}">`;
+  for (let i = 0; i <= 4; i++) { const y = 10 + (H - b - 10) * i / 4, v = dinh * (1 - i / 4); s += `<line x1="${l}" x2="${W - 4}" y1="${y}" y2="${y}" stroke="#eef0f3"/><text x="${l - 6}" y="${y + 4}" text-anchor="end">${trieu(v).replace(' tr', '')}</text>`; }
+  T.forEach((x, i) => {
+    const cx = l + cw * i + cw / 2, hTh = (H - b - 10) * x.thu / dinh, hCh = (H - b - 10) * x.chi / dinh;
+    s += `<rect x="${cx - bw - 1}" y="${H - b - hTh}" width="${bw}" height="${hTh}" rx="3" fill="#f6c700"><title>Tháng ${x.t} – thu ${vnd(x.thu)}</title></rect>`;
+    s += `<rect x="${cx + 1}" y="${H - b - hCh}" width="${bw}" height="${hCh}" rx="3" fill="#1f2329"><title>Tháng ${x.t} – chi ${vnd(x.chi)}</title></rect>`;
+    s += `<text x="${cx}" y="${H - 6}" text-anchor="middle">T${x.t}</text>`;
+  });
+  return s + '</svg>';
+}
+
+/* ---------- Tổng quan ---------- */
 TRANG['#/'] = async nd => {
-  const d = await goi('trangChu');
-  let h = `<h2>Chào ${esc(ME.ten)}</h2><div class="luoi">`;
-  h += `<div class="the"><div class="nho">Công trình đang làm</div><div class="so">${d.cong_trinh.dang_lam}/${d.cong_trinh.tong}</div></div>`;
+  const [d, tc] = await Promise.all([goi('trangChu'), ME.quyen.thuchi ? goi('thuChi') : Promise.resolve(null)]);
+  const hom = new Date(), chao = hom.getHours() < 11 ? 'Chào buổi sáng' : hom.getHours() < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
+  let h = tieuDe(`${chao}, ${esc(String(ME.ten).split(' ').pop())}`, `Số liệu Excel đọc lúc ${esc(d.luc || '')}`);
+  h += '<div class="luoi">';
   if (d.thu_thang != null) {
-    h += `<div class="the"><div class="nho">Thu tháng ${d.thang.slice(5)}</div><div class="so">${vnd(d.thu_thang)}</div></div>`;
-    h += `<div class="the"><div class="nho">Chi tháng ${d.thang.slice(5)}</div><div class="so">${vnd(d.chi_thang)}</div></div>`;
-    h += `<div class="the"><div class="nho">Còn phải thu</div><div class="so">${vnd(d.con_phai_thu)}</div></div>`;
-    if (d.tk_cong_ty) h += `<div class="the"><div class="nho">TK công ty (theo sổ)</div><div class="so">${vnd(d.tk_cong_ty.tk_cong_ty)}</div></div>`;
+    h += `<div class="kpi"><div class="nhan">Tổng thu ${new Date().getFullYear()}</div><div class="so">${trieu(d.tong_thu)}</div><div class="them">Tháng ${+d.thang.slice(5)}: ${trieu(d.thu_thang)}</div></div>`;
+    h += `<div class="kpi toi"><div class="nhan">Tổng chi ${new Date().getFullYear()}</div><div class="so">${trieu(d.tong_chi)}</div><div class="them">Tháng ${+d.thang.slice(5)}: ${trieu(d.chi_thang)}</div></div>`;
+    h += `<a class="kpi do" href="#/cong-no"><div class="nhan">Còn phải thu</div><div class="so">${trieu(d.con_phai_thu)}</div><div class="them">Theo sổ thu</div></a>`;
   }
-  if (d.cho_duyet != null) h += `<a class="the" href="#/cho-duyet" style="text-decoration:none;color:inherit"><div class="nho">Tiến độ chờ duyệt</div><div class="so">${d.cho_duyet}</div></a>`;
+  h += `<a class="kpi xanh" href="#/cong-trinh"><div class="nhan">Công trình đang làm</div><div class="so">${d.cong_trinh.dang_lam}<span style="font-size:15px;color:var(--phu)"> / ${d.cong_trinh.tong}</span></div><div class="them">${d.cua_toi.length ? d.cua_toi.length + ' công trình của tôi' : 'Năm ' + new Date().getFullYear()}</div></a>`;
   h += '</div>';
-  if (d.han_nop && d.han_nop.length) h += `<div class="the"><h3>Hạn nộp 30 ngày tới</h3>${d.han_nop.map(x => `<div class="dong"><span>${esc(x.loai)} ${esc(x.ky)}</span><b>${ngay(x.han)}</b></div>`).join('')}</div>`;
-  if (d.cua_toi.length) h += `<div class="the"><h3>Công trình của tôi</h3>${d.cua_toi.map(x => `<div class="dong" onclick="location.hash='#/ct?ma=${x.ma}'"><span>${esc(x.ten)}</span>${tag(x.trang_thai)}</div>`).join('')}</div>`;
-  (d.canh_bao || []).forEach(c => h += `<div class="canh">${esc(c)}</div>`);
-  h += `<p class="nho">Số liệu Excel đọc lúc ${esc(d.luc || '')}</p>`;
+  (d.canh_bao || []).forEach(c => h += `<div class="canh">${ic('canh')}<span>${esc(c)}</span></div>`);
+  h += '<div class="hai"><div>';
+  if (tc) h += `<div class="the"><h3>Thu – chi theo tháng<span class="chu-giai"><span><i style="background:#f6c700"></i>Thu</span><span><i style="background:#1f2329"></i>Chi</span></span></h3>${bieuDoThang(tc.thu, tc.chi)}</div>`;
+  if (tc) { const gan = tc.thu.map(x => ({ ...x, l: 'Thu' })).concat(tc.chi.map(x => ({ ...x, l: 'Chi' }))).filter(x => (x.ngay || '') <= new Date().toISOString().slice(0, 10)).sort((a, b) => (b.ngay || '').localeCompare(a.ngay || '')).slice(0, 8);
+    h += `<div class="the"><h3>Giao dịch gần đây<a class="nho" href="#/thu-chi">Xem tất cả →</a></h3>${gan.map(x => `<div class="dong" onclick="location.hash='#/thu-chi'"><div class="chinh"><b>${esc(x.noi_dung)}</b><div class="nho">${ngay(x.ngay)}${x.nguoi_chi ? ' · ' + esc(x.nguoi_chi) : ''}</div></div><b class="so" style="color:${x.l === 'Thu' ? 'var(--xanh)' : 'var(--chu)'}">${x.l === 'Thu' ? '+' : '−'}${vnd(x.tien)}</b></div>`).join('')}</div>`; }
+  h += '</div><div>';
+  if (d.cho_duyet != null) h += `<a class="kpi" href="#/cho-duyet" style="margin-bottom:16px"><div class="nhan">${ic('duyet', 'width:16px;height:16px')}Tiến độ chờ duyệt</div><div class="so">${d.cho_duyet}</div></a>`;
+  h += `<div class="the"><h3>Hạn nộp 30 ngày tới</h3>${(d.han_nop || []).map(x => `<div class="dong"><span>${esc(x.loai)} ${esc(x.ky)}</span><span class="tag t-dang">${ngay(x.han)}</span></div>`).join('') || '<div class="rong nho">Chưa có hạn nộp nào</div>'}</div>`;
+  h += `<div class="the"><h3>Công trình của tôi</h3>${d.cua_toi.map(x => `<div class="dong" onclick="location.hash='#/ct?ma=${x.ma}'"><div class="chinh"><div class="ma">${x.ma}</div><b>${esc(x.ten)}</b></div>${tag(x.trang_thai)}</div>`).join('') || '<div class="rong nho">Chưa được phân công công trình nào</div>'}</div>`;
+  h += '</div></div>';
   nd.innerHTML = h;
 };
 
 /* ---------- Công trình ---------- */
 TRANG['#/cong-trinh'] = async nd => {
   const ds = CACHE.ct = await goi('congTrinh');
-  nd.innerHTML = `<h2>Công trình (${ds.length})</h2><div class="the"><div class="hang"><input id="timCT" placeholder="Tìm tên công trình…">
-    <select id="locCT"><option value="">Tất cả</option><option>Đang làm</option><option>Đã xong</option><option>Hủy</option><option value="toi">Của tôi</option></select></div><div id="dsCT"></div></div>`;
+  const dem = s => ds.filter(x => x.trang_thai === s).length;
+  nd.innerHTML = tieuDe('Công trình', `${ds.length} công trình · ${dem('Đang làm')} đang làm · ${dem('Đã xong')} đã xong · ${dem('Hủy')} hủy`) +
+    `<div class="the"><div class="hang" style="margin-bottom:10px"><input id="timCT" placeholder="Tìm tên hoặc mã công trình…" style="flex:3">
+    <select id="locCT"><option value="">Tất cả trạng thái</option><option>Đang làm</option><option>Đã xong</option><option>Hủy</option><option value="toi">Của tôi</option></select></div>
+    <div class="cuon"><table class="bang co-the"><thead><tr><th>Mã</th><th>Công trình</th><th>Chủ trì</th><th>Mối</th>${ME.quyen.hopdong ? '<th class="r">Giá trị nhận</th>' : ''}<th>Trạng thái</th></tr></thead><tbody id="dsCT"></tbody></table></div></div>`;
   const ve = () => {
     const q = $('#timCT').value.toLowerCase(), l = $('#locCT').value;
     $('#dsCT').innerHTML = ds.filter(x => (!q || x.ten.toLowerCase().includes(q) || x.ma.toLowerCase().includes(q)) && (!l || (l === 'toi' ? x.cua_toi : x.trang_thai === l)))
-      .map(x => `<div class="dong" onclick="location.hash='#/ct?ma=${x.ma}'"><span><span class="nho">${x.ma}</span> ${esc(x.ten)}${x.thu_muc_id ? '' : ' <span class="tag t-huy">chưa ghép thư mục</span>'}</span>${tag(x.trang_thai)}</div>`).join('') || '<p class="nho">Không có</p>';
+      .map(x => `<tr style="cursor:pointer" onclick="location.hash='#/ct?ma=${x.ma}'"><td data-n="Mã"><span class="ma">${x.ma}</span></td><td data-n="Công trình"><b>${esc(x.ten)}</b>${x.thu_muc_id ? '' : ' <span class="tag t-xam">chưa có thư mục</span>'}</td><td data-n="Chủ trì">${esc(x.chu_tri || '')}</td><td data-n="Mối">${esc(x.moi || '')}</td>${ME.quyen.hopdong ? `<td class="r" data-n="Giá trị nhận">${x.tien && x.tien.gt_nhan ? vnd(x.tien.gt_nhan) : ''}</td>` : ''}<td data-n="Trạng thái">${tag(x.trang_thai)}</td></tr>`).join('') || '<tr><td colspan="6" class="rong">Không có công trình phù hợp</td></tr>';
   };
   $('#timCT').oninput = ve; $('#locCT').onchange = ve; ve();
 };
 TRANG['#/ct'] = async (nd, q) => {
   const x = await goi('ctChiTiet', { ma: q.get('ma') });
-  let h = `<p><a href="#/cong-trinh">← Công trình</a></p><h2>${esc(x.ten)}</h2><div class="the">
-    <div class="hang"><span class="nho">${x.ma}</span>${tag(x.trang_thai)}</div>
-    <p>Nhận: ${ngay(x.ngay_nhan)} · Chủ trì: ${esc(x.chu_tri)} · Mối: ${esc(x.moi)}</p>
-    <p class="nho">${esc(x.tien_do)}</p>${x.thu_muc_id ? `<a href="https://drive.google.com/drive/folders/${x.thu_muc_id}" target="_blank">Mở thư mục hồ sơ ↗</a>` : '<span class="canh">Chưa ghép thư mục Drive</span>'}</div>`;
+  let h = `<p style="margin:0 0 8px"><a href="#/cong-trinh" class="nho">← Danh sách công trình</a></p>` +
+    tieuDe(esc(x.ten), `${x.ma} · Nhận ${ngay(x.ngay_nhan) || '—'} · Chủ trì ${esc(x.chu_tri || '—')} · Mối ${esc(x.moi || '—')}`,
+      `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${tag(x.trang_thai)}${x.thu_muc_id ? `<a class="nut vang" href="https://drive.google.com/drive/folders/${x.thu_muc_id}" target="_blank" style="text-decoration:none">${ic('mo', 'width:16px;height:16px')}Thư mục hồ sơ</a>` : '<span class="tag t-xam">Chưa có thư mục Drive</span>'}</div>`);
   if (x.tien) {
-    const t = x.tien; h += `<div class="the"><h3>Tiền</h3><table>
-      <tr><td>Giá trị nhận</td><td class="r">${vnd(t.gt_nhan)}</td></tr>` +
-      (t.chi_a != null ? `<tr><td>Chi A</td><td class="r">${vnd(t.chi_a)}</td></tr><tr><td>Thuê người</td><td class="r">${vnd(t.thue_nguoi)}</td></tr>
-      <tr><td>Thuế TNDN / VAT</td><td class="r">${vnd(t.tndn)} / ${vnd(t.vat)}</td></tr><tr><td><b>Còn lại về công ty</b></td><td class="r"><b>${vnd(t.con_lai)}</b></td></tr>` : '') + '</table></div>';
+    const t = x.tien;
+    h += '<div class="luoi">' + [['Giá trị nhận', t.gt_nhan, ''], ['Chi A', t.chi_a, 'toi'], ['Thuê người', t.thue_nguoi, 'toi'], ['Còn lại về công ty', t.con_lai, 'xanh']]
+      .filter(k => k[1] != null).map(k => `<div class="kpi ${k[2]}"><div class="nhan">${k[0]}</div><div class="so">${vnd(k[1])}</div></div>`).join('') + '</div>';
   }
-  if (x.thu && x.thu.length) h += `<div class="the"><h3>Đã thu (theo sổ)</h3><table>${x.thu.map(t => `<tr><td>${ngay(t.ngay)}</td><td>${esc(t.noi_dung)}</td><td class="r">${vnd(t.tien)}</td></tr>`).join('')}</table></div>`;
-  h += `<div class="the"><h3>Người thực hiện</h3>${x.phan_cong.filter(p => !p.den).map(p => `<div class="dong"><span><span class="av" style="display:inline-grid;width:24px;height:24px;font-size:11px">${tat(p.ten)}</span> ${esc(p.ten)} – ${esc(p.vai)}</span>${ME.vai === 'admin' ? `<button class="phu" onclick="goPC('${x.ma}','${p.ma_nguoi}')">Gỡ</button>` : ''}</div>`).join('') || '<p class="nho">Chưa phân công</p>'}
-    ${ME.vai === 'admin' ? `<div class="hang" style="margin-top:8px"><select id="pcNguoi"></select><select id="pcVai"><option>phụ trách</option><option selected>thực hiện</option><option>xem</option></select><button onclick="themPC('${x.ma}')">Phân công</button></div>` : ''}</div>`;
-  h += `<div class="the"><h3>Tiến độ</h3>${(x.cua_toi || ME.vai === 'admin') ? `<div class="hang"><input id="tdND" placeholder="Nội dung tiến độ"><input id="tdPT" type="number" placeholder="% xong" style="max-width:90px"><button onclick="themTD('${x.ma}')">Lưu</button></div>` : ''}
-    ${x.tien_do_app.map(t => `<div class="dong"><span>${ngay(t.ngay)} · ${esc(t.noi_dung)}</span><span class="nho">${t.pt ? t.pt + '%' : ''} ${esc(t.nguoi)}</span></div>`).join('') || '<p class="nho">Chưa có tiến độ nhập trên app</p>'}</div>`;
-  h += `<div class="the"><h3>File mới sửa</h3>${x.file_moi.map(f => `<div class="dong"><a href="${f.link}" target="_blank">${f.thu_muc ? '📁 ' : ''}${esc(f.ten)}</a><span class="nho">${esc(f.nguoi)} ${f.luc ? new Date(f.luc).toLocaleString('vi-VN') : ''}</span></div>`).join('') || '<p class="nho">Không có</p>'}</div>`;
+  h += '<div class="hai"><div>';
+  h += `<div class="the"><h3>Tiến độ</h3>${x.tien_do ? `<p class="nho" style="margin-top:-4px">Ghi chú trong Excel: ${esc(x.tien_do)}</p>` : ''}
+    ${(x.cua_toi || ME.vai === 'admin') ? `<div class="hang" style="margin-bottom:8px"><input id="tdND" placeholder="Nội dung tiến độ mới" style="flex:3"><input id="tdPT" type="number" min="0" max="100" placeholder="% xong"><button class="nut" style="flex:none" onclick="themTD('${x.ma}')">Lưu</button></div>` : ''}
+    ${x.tien_do_app.map(t => `<div class="dong"><div class="chinh"><b>${esc(t.noi_dung)}</b><div class="nho">${ngay(t.ngay)} · ${esc(t.nguoi)}</div></div>${t.pt ? `<span class="tag t-xong">${t.pt}%</span>` : ''}</div>`).join('') || '<div class="rong nho">Chưa có tiến độ nhập trên app</div>'}</div>`;
+  if (x.thu && x.thu.length) h += `<div class="the"><h3>Đã thu (theo sổ)</h3>${x.thu.map(t => `<div class="dong"><div class="chinh"><b>${esc(t.noi_dung)}</b><div class="nho">${ngay(t.ngay)}</div></div><b class="so" style="color:var(--xanh)">+${vnd(t.tien)}</b></div>`).join('')}</div>`;
+  h += '</div><div>';
+  h += `<div class="the"><h3>Người thực hiện</h3>${x.phan_cong.filter(p => !p.den).map(p => `<div class="dong"><div style="display:flex;gap:10px;align-items:center"><span class="av" style="width:30px;height:30px;font-size:12px">${tat(p.ten)}</span><div><b>${esc(p.ten)}</b><div class="nho">${esc(p.vai)}</div></div></div>${ME.vai === 'admin' ? `<button class="nut phu" onclick="goPC('${x.ma}','${p.ma_nguoi}')">Gỡ</button>` : ''}</div>`).join('') || '<div class="rong nho">Chưa phân công</div>'}
+    ${ME.vai === 'admin' ? `<div class="hang" style="margin-top:10px"><select id="pcNguoi"></select><select id="pcVai"><option>phụ trách</option><option selected>thực hiện</option><option>xem</option></select><button class="nut" style="flex:none" onclick="themPC('${x.ma}')">Phân công</button></div>` : ''}</div>`;
+  h += `<div class="the"><h3>File mới sửa</h3>${x.file_moi.map(f => `<div class="dong" onclick="window.open('${f.link}','_blank')"><div class="chinh"><b>${f.thu_muc ? '📁 ' : ''}${esc(f.ten)}</b><div class="nho">${esc(f.nguoi)} · ${f.luc ? new Date(f.luc).toLocaleString('vi-VN') : ''}</div></div>${ic('mo', 'width:16px;height:16px;color:var(--phu)')}</div>`).join('') || '<div class="rong nho">Không có file</div>'}</div>`;
+  h += '</div></div>';
   nd.innerHTML = h;
   if (ME.vai === 'admin') { const db = CACHE.db || (CACHE.db = await goi('danhBa')); $('#pcNguoi').innerHTML = db.map(n => `<option value="${n.ma}">${esc(n.ten)}</option>`).join(''); }
 };
 async function themTD(ma) { const nd = $('#tdND').value.trim(); if (!nd) return bao('Nhập nội dung'); await goi('themTienDo', { ma, noi_dung: nd, pt: $('#tdPT').value }); bao('Đã lưu tiến độ'); dinhTuyen(); }
-async function themPC(ma) { const r = await goi('phanCong', { ma, ma_nguoi: $('#pcNguoi').value, vai: $('#pcVai').value }); bao(r.chia_se ? 'Đã phân công và chia sẻ thư mục' : 'Đã phân công (chưa ghép thư mục nên chưa chia sẻ)', 4000); dinhTuyen(); }
+async function themPC(ma) { const r = await goi('phanCong', { ma, ma_nguoi: $('#pcNguoi').value, vai: $('#pcVai').value }); bao(r.chia_se ? 'Đã phân công và chia sẻ thư mục' : 'Đã phân công (chưa có thư mục nên chưa chia sẻ)', 4000); dinhTuyen(); }
 async function goPC(ma, mn) { if (!confirm('Gỡ phân công và gỡ quyền thư mục do app cấp?')) return; await goi('goPhanCong', { ma, ma_nguoi: mn }); bao('Đã gỡ'); dinhTuyen(); }
 
 /* ---------- Thu chi ---------- */
 TRANG['#/thu-chi'] = async nd => {
   const d = await goi('thuChi'); const ct = CACHE.ct || (CACHE.ct = await goi('congTrinh'));
-  const thang = [...new Set(d.thu.concat(d.chi).map(x => (x.ngay || '').slice(0, 7)).filter(Boolean))].sort().reverse();
-  nd.innerHTML = `<h2>Thu chi</h2>${(d.canh_bao || []).map(c => `<div class="canh">${esc(c)}</div>`).join('')}
-  <div class="the"><h3>Nhập mới</h3><div class="hang"><select id="tcLoai"><option>Chi</option><option>Thu</option></select><input id="tcNgay" type="date"><input id="tcTien" inputmode="numeric" placeholder="Số tiền"></div>
-  <label>Công trình</label><select id="tcCT"><option value="">(chi chung công ty)</option>${ct.map(x => `<option value="${x.ma}">${x.ma} ${esc(x.ten)}</option>`).join('')}</select>
-  <div class="hang"><div><label>Nội dung</label><input id="tcND"></div><div><label>Đối tượng</label><input id="tcDT"></div><div><label>TK/TM</label><select id="tcTK"><option>TK</option><option>TM</option></select></div></div>
-  <p><button onclick="luuTC()">Lưu</button> <span class="nho">Lưu vào bảng phụ của app; file Excel không bị sửa.</span></p></div>
-  <div class="the"><div class="hang"><select id="tcThang">${thang.map(t => `<option>${t}</option>`).join('')}<option value="">Tất cả</option></select></div><div class="cuon" id="tcDS"></div></div>`;
+  const thang = [...new Set(d.thu.concat(d.chi).map(x => (x.ngay || '').slice(0, 7)).filter(Boolean))].sort().reverse(); const thNay=new Date().toISOString().slice(0,7); thang.sort((a,b)=>(a>thNay)-(b>thNay)||b.localeCompare(a));
+  nd.innerHTML = tieuDe('Thu chi', `Theo sổ Excel (chỉ đọc) và các dòng nhập trên app · đọc lúc ${esc(d.luc || '')}`,
+    ME.quyen.thuchi > 1 ? `<button class="nut vang" style="flex:none" onclick="$('#tcForm').classList.toggle('an')">+ Nhập mới</button>` : '') +
+    (d.canh_bao || []).map(c => `<div class="canh">${ic('canh')}<span>${esc(c)}</span></div>`).join('') +
+    `<div class="the an" id="tcForm"><h3>Nhập khoản mới</h3><div class="hang"><div><label>Loại</label><select id="tcLoai"><option>Chi</option><option>Thu</option></select></div><div><label>Ngày</label><input id="tcNgay" type="date"></div><div><label>Số tiền</label><input id="tcTien" inputmode="numeric" placeholder="VD 1500000"></div><div><label>TK/TM</label><select id="tcTK"><option>TK</option><option>TM</option></select></div></div>
+    <label>Công trình</label><select id="tcCT"><option value="">(chi chung công ty)</option>${ct.map(x => `<option value="${x.ma}">${x.ma} ${esc(x.ten)}</option>`).join('')}</select>
+    <div class="hang"><div style="flex:2"><label>Nội dung</label><input id="tcND"></div><div><label>Đối tượng</label><input id="tcDT"></div></div>
+    <p style="margin:14px 0 0"><button class="nut" onclick="luuTC()">Lưu</button> <span class="nho">Lưu vào bảng phụ của app, file Excel không bị sửa.</span></p></div>
+    <div class="the"><div class="hang" style="margin-bottom:12px"><div class="tab" id="tcTab" style="flex:none"><button class="on" data-l="">Tất cả</button><button data-l="Thu">Thu</button><button data-l="Chi">Chi</button></div>
+    <select id="tcThang" style="max-width:220px">${thang.map(t => `<option value="${t}">Tháng ${+t.slice(5)}/${t.slice(0, 4)}</option>`).join('')}<option value="">Cả năm</option></select><div id="tcTong" class="nho" style="flex:2;text-align:right"></div></div>
+    <div class="cuon"><table class="bang co-the"><thead><tr><th>Ngày</th><th>Nội dung</th><th>Người chi / nhập</th><th class="r">Thu</th><th class="r">Chi</th></tr></thead><tbody id="tcDS"></tbody></table></div></div>`;
   $('#tcNgay').valueAsDate = new Date();
+  let loai = '';
   const ve = () => {
     const t = $('#tcThang').value, f = x => !t || (x.ngay || '').startsWith(t);
     const rows = d.thu.filter(f).map(x => ({ ...x, l: 'Thu' })).concat(d.chi.filter(f).map(x => ({ ...x, l: 'Chi' })))
-      .concat(d.app.filter(f).map(x => ({ ...x, l: x.loai, app: 1 }))).sort((a, b) => (b.ngay || '').localeCompare(a.ngay || ''));
+      .concat(d.app.filter(f).map(x => ({ ...x, l: x.loai, app: 1 }))).filter(x => !loai || x.l === loai).sort((a, b) => (b.ngay || '').localeCompare(a.ngay || ''));
     const sThu = rows.filter(x => x.l === 'Thu').reduce((s, x) => s + x.tien, 0), sChi = rows.filter(x => x.l === 'Chi').reduce((s, x) => s + x.tien, 0);
-    $('#tcDS').innerHTML = `<p>Thu <b>${vnd(sThu)}</b> · Chi <b>${vnd(sChi)}</b></p><table><tr><th>Ngày</th><th>Nội dung</th><th>Người chi</th><th class="r">Thu</th><th class="r">Chi</th></tr>` +
-      rows.map(x => `<tr><td>${ngay(x.ngay)}</td><td>${esc(x.noi_dung)}${x.app ? ' <span class="tag">app</span>' : ''}${x.trung ? ' <span class="tag t-huy">nghi trùng</span>' : ''}</td><td>${esc(x.nguoi_chi || x.nguoi_nhap || '')}</td><td class="r">${x.l === 'Thu' ? vnd(x.tien) : ''}</td><td class="r">${x.l === 'Chi' ? vnd(x.tien) : ''}</td></tr>`).join('') + '</table>';
+    $('#tcTong').innerHTML = `Thu <b style="color:var(--xanh)">${vnd(sThu)}</b> · Chi <b>${vnd(sChi)}</b> · ${rows.length} dòng`;
+    $('#tcDS').innerHTML = rows.map(x => `<tr><td data-n="Ngày" style="white-space:nowrap">${ngay(x.ngay)}</td><td data-n="Nội dung"><b style="font-weight:500">${esc(x.noi_dung)}</b>${x.app ? ' <span class="tag t-xam">app</span>' : ''}${x.trung ? ' <span class="tag t-huy">nghi trùng</span>' : ''}</td><td data-n="Người">${esc(x.nguoi_chi || x.nguoi_nhap || '')}</td><td class="r" data-n="Thu" style="color:var(--xanh)">${x.l === 'Thu' ? vnd(x.tien) : ''}</td><td class="r" data-n="Chi">${x.l === 'Chi' ? vnd(x.tien) : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="rong">Không có dòng nào</td></tr>';
   };
+  document.querySelectorAll('#tcTab button').forEach(b => b.onclick = () => { loai = b.dataset.l; document.querySelectorAll('#tcTab button').forEach(x => x.classList.toggle('on', x === b)); ve(); });
   $('#tcThang').onchange = ve; ve();
 };
 async function luuTC() {
@@ -207,24 +322,24 @@ async function luuTC() {
 /* ---------- Công nợ ---------- */
 TRANG['#/cong-no'] = async nd => {
   const d = await goi('congNo'); const tong = d.phai_thu.reduce((s, x) => s + x.con_thu, 0);
-  nd.innerHTML = `<h2>Công nợ</h2><div class="the"><h3>Phải thu chủ đầu tư: ${vnd(tong)}</h3><div class="cuon"><table><tr><th>Công trình</th><th class="r">Đã thu</th><th class="r">Còn thu</th></tr>
-  ${d.phai_thu.sort((a, b) => b.con_thu - a.con_thu).map(x => `<tr><td>${esc(x.noi_dung)}<div class="nho">${esc(x.ghi_chu)}</div></td><td class="r">${vnd(x.da_thu)}</td><td class="r"><b>${vnd(x.con_thu)}</b></td></tr>`).join('')}</table></div></div>
-  <p class="nho">Phải trả CTV/đối tác: làm ở bước sau (cần hệ số đã xác nhận).</p>`;
+  nd.innerHTML = tieuDe('Công nợ', `Đọc lúc ${esc(d.luc || '')}`) +
+    `<div class="luoi"><div class="kpi do"><div class="nhan">Phải thu chủ đầu tư</div><div class="so">${vnd(tong)}</div><div class="them">${d.phai_thu.length} khoản</div></div><div class="kpi toi"><div class="nhan">Phải trả CTV / đối tác</div><div class="so">—</div><div class="them">Làm sau khi xác nhận hệ số</div></div></div>
+    <div class="the"><h3>Chi tiết phải thu</h3><div class="cuon"><table class="bang co-the"><thead><tr><th>Công trình</th><th class="r">Đã thu</th><th class="r">Còn thu</th></tr></thead><tbody>
+    ${d.phai_thu.sort((a, b) => b.con_thu - a.con_thu).map(x => `<tr><td data-n="Công trình"><b style="font-weight:500">${esc(x.noi_dung)}</b><div class="nho">${esc(x.ghi_chu)}</div></td><td class="r" data-n="Đã thu">${vnd(x.da_thu)}</td><td class="r" data-n="Còn thu"><b style="color:#b42318">${vnd(x.con_thu)}</b></td></tr>`).join('')}</tbody></table></div></div>`;
 };
 
 /* ---------- Văn phòng ---------- */
 TRANG['#/van-phong'] = async nd => {
-  const d = await goi('vanPhong'), t = d.tong_hop;
-  const nhap = ME.vai !== 'ketoan';
-  nd.innerHTML = `<h2>Văn phòng</h2><div class="luoi"><div class="the"><div class="nho">Tổng chi</div><div class="so">${vnd(t.tong)}</div></div>
-  <div class="the"><div class="nho">Anh Khuê đã chi</div><div class="so">${vnd(t.theo_nguoi['Khuê'])}</div></div><div class="the"><div class="nho">Anh Tùng đã chi</div><div class="so">${vnd(t.theo_nguoi['Tùng'])}</div></div>
-  <div class="the"><div class="nho">${t.tung_con_phai_tra_khue >= 0 ? 'Anh Tùng còn phải trả anh Khuê' : 'Anh Khuê còn phải trả anh Tùng'}</div><div class="so">${vnd(Math.abs(t.tung_con_phai_tra_khue))}</div></div>
-  <div class="the"><div class="nho">Quỹ của Thư còn</div><div class="so">${vnd(d.quy_thu.con)}</div><div class="nho">Đã cấp ${vnd(d.quy_thu.da_cap)} · đã chi ${vnd(d.quy_thu.da_chi)}</div></div></div>
-  ${nhap ? `<div class="the"><h3>Nhập khoản</h3><div class="hang"><input id="vpNgay" type="date"><input id="vpTien" inputmode="numeric" placeholder="Số tiền"></div>
-    <label>Khoản</label><input id="vpND">${ME.vai === 'admin' ? `<div class="hang"><div><label>Loại</label><select id="vpLoai"><option>chi</option><option>cấp quỹ</option></select></div><div><label>Người chi</label><select id="vpNguoi"><option>Khuê</option><option>Tùng</option><option>quỹ Thư</option></select></div></div>` : ''}
-    <p><button onclick="luuVP()">Lưu</button></p></div>` : ''}
-  <div class="the cuon"><table><tr><th>Ngày</th><th>Khoản</th><th>Người chi</th><th class="r">Số tiền</th></tr>${d.excel.map(x => ({ ...x })).concat(d.app.map(x => ({ ...x, app: 1 })))
-    .sort((a, b) => (b.ngay || '').localeCompare(a.ngay || '')).map(x => `<tr><td>${ngay(x.ngay)}</td><td>${esc(x.noi_dung)}${x.app ? ' <span class="tag">app</span>' : ''}${x.loai === 'cấp quỹ' ? ' <span class="tag">cấp quỹ</span>' : ''}</td><td>${esc(x.nguoi_chi)}</td><td class="r">${vnd(x.tien)}</td></tr>`).join('')}</table></div>`;
+  const d = await goi('vanPhong'), t = d.tong_hop, nhap = ME.vai !== 'ketoan';
+  nd.innerHTML = tieuDe('Văn phòng 81 THS', 'Chi phí công ty, anh Khuê và anh Tùng chia đôi',
+    nhap ? `<button class="nut vang" style="flex:none" onclick="$('#vpForm').classList.toggle('an')">+ Nhập khoản</button>` : '') +
+    `<div class="luoi"><div class="kpi toi"><div class="nhan">Tổng chi</div><div class="so">${vnd(t.tong)}</div><div class="them">Mỗi người chịu ${vnd(t.moi_nguoi)}</div></div>
+    <div class="kpi"><div class="nhan">Anh Khuê đã chi</div><div class="so">${vnd(t.theo_nguoi['Khuê'])}</div></div><div class="kpi"><div class="nhan">Anh Tùng đã chi</div><div class="so">${vnd(t.theo_nguoi['Tùng'])}</div></div>
+    <div class="kpi do"><div class="nhan">${t.tung_con_phai_tra_khue >= 0 ? 'Anh Tùng còn phải trả anh Khuê' : 'Anh Khuê còn phải trả anh Tùng'}</div><div class="so">${vnd(Math.abs(t.tung_con_phai_tra_khue))}</div><div class="them">Quỹ của Thư còn ${vnd(d.quy_thu.con)}</div></div></div>
+    ${nhap ? `<div class="the an" id="vpForm"><h3>Nhập khoản</h3><div class="hang"><div><label>Ngày</label><input id="vpNgay" type="date"></div><div><label>Số tiền</label><input id="vpTien" inputmode="numeric"></div>${ME.vai === 'admin' ? `<div><label>Loại</label><select id="vpLoai"><option>chi</option><option>cấp quỹ</option></select></div><div><label>Người chi</label><select id="vpNguoi"><option>Khuê</option><option>Tùng</option><option>quỹ Thư</option></select></div>` : ''}</div>
+      <label>Khoản</label><input id="vpND"><p style="margin:14px 0 0"><button class="nut" onclick="luuVP()">Lưu</button></p></div>` : ''}
+    <div class="the"><h3>Các khoản chi</h3><div class="cuon"><table class="bang co-the"><thead><tr><th>Ngày</th><th>Khoản</th><th>Người chi</th><th class="r">Số tiền</th></tr></thead><tbody>${d.excel.map(x => ({ ...x })).concat(d.app.map(x => ({ ...x, app: 1 })))
+    .sort((a, b) => (b.ngay || '').localeCompare(a.ngay || '')).map(x => `<tr><td data-n="Ngày" style="white-space:nowrap">${ngay(x.ngay)}</td><td data-n="Khoản">${esc(x.noi_dung)}${x.app ? ' <span class="tag t-xam">app</span>' : ''}${x.loai === 'cấp quỹ' ? ' <span class="tag t-dang">cấp quỹ</span>' : ''}</td><td data-n="Người chi">${esc(x.nguoi_chi)}</td><td class="r" data-n="Số tiền">${vnd(x.tien)}</td></tr>`).join('')}</tbody></table></div></div>`;
   if (nhap) $('#vpNgay').valueAsDate = new Date();
 };
 async function luuVP() {
@@ -236,35 +351,38 @@ async function luuVP() {
 /* ---------- Chờ duyệt ---------- */
 TRANG['#/cho-duyet'] = async nd => {
   const ds = (await goi('choDuyet')).filter(r => r['Trạng thái (chờ/duyệt/bỏ)'] === 'chờ');
-  nd.innerHTML = `<h2>Tiến độ chờ duyệt (${ds.length})</h2>` + (ds.map(r => `<div class="the"><div class="nho">${esc(r['Mã CT'])} · ${esc(r['Nguồn (Zalo/web)'])} · ${esc(r['Thời điểm gốc'])}</div>
-    <p class="nho">“${esc(r['Trích dẫn gốc'])}”</p><textarea id="nd_${r['Mã dòng']}">${esc(r['Nội dung đề xuất'])}</textarea>
-    ${ME.quyen.choduyet > 1 ? `<p class="hang"><button onclick="duyet('${r['Mã dòng']}','duyệt')">Duyệt</button><button class="phu" onclick="duyet('${r['Mã dòng']}','bỏ')">Bỏ</button></p>` : ''}</div>`).join('') || '<div class="the nho">Không có mục chờ duyệt</div>');
+  nd.innerHTML = tieuDe('Tiến độ chờ duyệt', `${ds.length} mục lấy từ nhóm Zalo và trang web`) + (ds.map(r => `<div class="the"><div class="nho"><span class="ma">${esc(r['Mã CT'])}</span> · ${esc(r['Nguồn (Zalo/web)'])} · ${esc(r['Thời điểm gốc'])}</div>
+    <p style="border-left:3px solid var(--vang);padding-left:10px;color:var(--phu)">${esc(r['Trích dẫn gốc'])}</p><textarea id="nd_${r['Mã dòng']}" rows="2">${esc(r['Nội dung đề xuất'])}</textarea>
+    ${ME.quyen.choduyet > 1 ? `<p class="hang" style="margin:10px 0 0;justify-content:flex-end"><button class="nut phu" style="flex:none" onclick="duyet('${r['Mã dòng']}','bỏ')">Bỏ</button><button class="nut" style="flex:none" onclick="duyet('${r['Mã dòng']}','duyệt')">Duyệt</button></p>` : ''}</div>`).join('') || '<div class="the rong">Không có mục nào chờ duyệt</div>');
 };
 async function duyet(ma, tt) { await goi('duyet', { ma, trang_thai: tt, noi_dung: $('#nd_' + ma).value }); bao(tt === 'duyệt' ? 'Đã duyệt' : 'Đã bỏ'); dinhTuyen(); }
 
 /* ---------- Danh bạ ---------- */
 TRANG['#/danh-ba'] = async nd => {
   const ds = CACHE.db = await goi('danhBa'), sua = ME.quyen.danhba > 1;
-  nd.innerHTML = `<h2>Danh bạ (${ds.length})</h2><div class="the">${ds.map(n => `<div class="dong"><span style="display:flex;gap:10px;align-items:center"><span class="av">${tat(n.ten)}</span><span><b>${esc(n.ten)}</b><div class="nho">${esc(n.vai_tro)} · ${esc(n.sdt)} · ${esc(n.gmail)}</div></span></span>${n.dang_nhap === 'Có' ? '<span class="tag t-xong">dùng app</span>' : ''}</div>`).join('')}</div>
-  ${sua ? `<div class="the"><h3>Thêm người (CTV, chủ đầu tư, đối tác)</h3><div class="hang"><input id="dbTen" placeholder="Họ tên"><select id="dbVai"><option>Cộng tác viên</option><option>Chủ đầu tư</option><option>Đối tác</option><option>Nhân viên</option></select></div>
-    <div class="hang"><input id="dbSDT" placeholder="SĐT/Zalo"><input id="dbMail" placeholder="Gmail"></div><p><button onclick="luuDB()">Thêm</button></p></div>` : ''}`;
+  nd.innerHTML = tieuDe('Danh bạ', `${ds.length} người · nhân viên, cộng tác viên, chủ đầu tư, đối tác`, sua ? `<button class="nut vang" style="flex:none" onclick="$('#dbForm').classList.toggle('an')">+ Thêm người</button>` : '') +
+    (sua ? `<div class="the an" id="dbForm"><h3>Thêm người</h3><div class="hang"><div style="flex:2"><label>Họ tên</label><input id="dbTen"></div><div><label>Vai trò</label><select id="dbVai"><option>Cộng tác viên</option><option>Chủ đầu tư</option><option>Đối tác</option><option>Nhân viên</option></select></div></div>
+      <div class="hang"><div><label>SĐT/Zalo</label><input id="dbSDT" inputmode="tel"></div><div><label>Gmail</label><input id="dbMail" type="email"></div></div><p style="margin:14px 0 0"><button class="nut" onclick="luuDB()">Thêm</button></p></div>` : '') +
+    `<div class="luoi" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">${ds.map(n => `<div class="the" style="margin:0;display:flex;gap:12px;align-items:center"><span class="av" style="width:44px;height:44px;font-size:16px">${tat(n.ten)}</span><div style="min-width:0"><b>${esc(n.ten)}</b><div class="nho">${esc(n.vai_tro)}</div><div class="nho">${n.sdt ? `<a href="tel:${esc(n.sdt)}">${esc(n.sdt)}</a>` : ''}${n.gmail ? ' · ' + esc(n.gmail) : ''}</div></div>${n.dang_nhap === 'Có' ? '<span class="tag t-xong" style="margin-left:auto">dùng app</span>' : ''}</div>`).join('')}</div>`;
 };
 async function luuDB() { await goi('luuDanhBa', { ten: $('#dbTen').value, vai_tro: $('#dbVai').value, sdt: $('#dbSDT').value, gmail: $('#dbMail').value }); bao('Đã thêm'); dinhTuyen(); }
 
 /* ---------- Hệ số ---------- */
 TRANG['#/he-so'] = async nd => {
   const ds = await goi('heSo'), sua = ME.quyen.heso > 1;
-  nd.innerHTML = `<h2>Hệ số, tỷ lệ đã thống nhất</h2><div class="the cuon"><table><tr><th>Mã</th><th>Ngày</th><th>Đối tượng</th><th>Việc</th><th>Bên nhận</th><th class="r">%</th><th>Điều kiện</th><th>Trạng thái</th></tr>
-  ${ds.map(r => `<tr><td>${esc(r['Mã HS'])}</td><td>${esc(r['Ngày thống nhất'])}</td><td>${esc(r['Đối tượng'])}</td><td>${esc(r['Loại việc'])}</td><td>${esc(r['Bên nhận'])}</td><td class="r">${esc(r['Tỷ lệ %'])}</td><td>${esc(r['Điều kiện'])}<div class="nho">${esc(r['Nội dung gốc (file Excel)'])}</div></td>
-  <td>${esc(r['Trạng thái'])}${sua && /chờ/i.test(r['Trạng thái']) ? `<br><button class="phu" onclick="xacNhanHS('${r['Mã HS']}')">Xác nhận</button>` : ''}</td></tr>`).join('')}</table></div>`;
+  nd.innerHTML = tieuDe('Hệ số, tỷ lệ đã thống nhất', 'Chỉ anh Khuê và kế toán xem được') +
+    `<div class="the"><div class="cuon"><table class="bang co-the"><thead><tr><th>Mã</th><th>Ngày</th><th>Đối tượng</th><th>Việc</th><th>Bên nhận</th><th class="r">%</th><th>Điều kiện / nội dung gốc</th><th>Trạng thái</th></tr></thead><tbody>
+    ${ds.map(r => `<tr><td data-n="Mã"><span class="ma">${esc(r['Mã HS'])}</span></td><td data-n="Ngày">${esc(r['Ngày thống nhất'])}</td><td data-n="Đối tượng"><b style="font-weight:500">${esc(r['Đối tượng'])}</b><div class="nho">${esc(r['Loại'])}</div></td><td data-n="Việc">${esc(r['Loại việc'])}</td><td data-n="Bên nhận">${esc(r['Bên nhận'])}</td><td class="r" data-n="%"><b>${esc(r['Tỷ lệ %'])}</b></td><td data-n="Điều kiện">${esc(r['Điều kiện'])}<div class="nho">${esc(r['Nội dung gốc (file Excel)'])}</div></td>
+    <td data-n="Trạng thái">${/chờ/i.test(r['Trạng thái']) ? '<span class="tag t-dang">Chờ xác nhận</span>' : `<span class="tag t-xong">${esc(r['Trạng thái'])}</span>`}${sua && /chờ/i.test(r['Trạng thái']) ? `<div style="margin-top:6px"><button class="nut phu" onclick="xacNhanHS('${r['Mã HS']}')">Xác nhận</button></div>` : ''}</td></tr>`).join('')}</tbody></table></div></div>`;
 };
 async function xacNhanHS(ma) { await goi('luuHeSo', { 'Mã HS': ma, 'Trạng thái': 'Đã xác nhận ' + new Date().toLocaleDateString('vi-VN') }); bao('Đã xác nhận'); dinhTuyen(); }
 
 /* ---------- Cài đặt ---------- */
 TRANG['#/cai-dat'] = async nd => {
-  nd.innerHTML = `<h2>Cài đặt</h2><div class="the"><p>Đọc lại các file Excel ngay (bình thường app tự đọc 30 phút/lần khi file thay đổi).</p><button id="nutDB">Đọc lại Excel</button></div>
-  <div class="the nho">Phiên bản giao diện 0.1.0</div>`;
-  $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); bao(await goi('dongBoNgay')); $('#nutDB').disabled = false; };
+  nd.innerHTML = tieuDe('Cài đặt') + `<div class="the"><h3>Số liệu Excel</h3><p class="nho" style="margin-top:-6px">App tự đọc lại 30 phút/lần khi file Excel thay đổi. Bấm để đọc ngay.</p><button class="nut" id="nutDB">Đọc lại Excel ngay</button></div>
+  <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
+  <div class="the nho">Giao diện phiên bản 0.2.0</div>`;
+  $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
