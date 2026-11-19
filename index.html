@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KTC – Quản lý</title>
+<meta name="theme-color" content="#14365c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{--nen:#f4f6f9;--the:#fff;--chu:#1b2430;--phu:#5b6675;--vien:#dde3ea;--chinh:#14365c;--nhan:#e8a33d;--xanh:#1f8a4c;--do:#c0392b;--vang:#b7791f}
+@media (prefers-color-scheme:dark){:root{--nen:#10161e;--the:#18212c;--chu:#e6ebf1;--phu:#9aa6b4;--vien:#2a3644;--chinh:#7fb0e6}}
+*{box-sizing:border-box}html,body{margin:0;background:var(--nen);color:var(--chu);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--chinh);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top))}
+header b{font-size:16px;letter-spacing:.3px}header .sp{flex:1}
+.av{width:32px;height:32px;border-radius:50%;background:var(--nhan);color:#14365c;display:grid;place-items:center;font-weight:700;font-size:13px;overflow:hidden;flex:none}
+.av img{width:100%;height:100%;object-fit:cover}
+nav{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;background:var(--the);border-bottom:1px solid var(--vien);position:sticky;top:52px;z-index:4}
+nav a{white-space:nowrap;padding:6px 12px;border-radius:16px;color:var(--phu);text-decoration:none;font-size:14px}
+nav a.on{background:var(--chinh);color:#fff}
+main{max-width:980px;margin:0 auto;padding:14px 16px 90px}
+.the{background:var(--the);border:1px solid var(--vien);border-radius:10px;padding:14px;margin-bottom:12px}
+.luoi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.so{font-size:20px;font-weight:700}.nho{font-size:12.5px;color:var(--phu)}
+h2{font-size:17px;margin:4px 0 10px}h3{font-size:15px;margin:12px 0 6px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:7px 6px;border-bottom:1px solid var(--vien);text-align:left;vertical-align:top}
+th{color:var(--phu);font-weight:600;font-size:12.5px}td.r,th.r{text-align:right;white-space:nowrap}
+.cuon{overflow-x:auto}
+.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;border:1px solid var(--vien)}
+.t-xong{color:var(--xanh);border-color:var(--xanh)}.t-dang{color:var(--vang);border-color:var(--vang)}.t-huy{color:var(--do);border-color:var(--do)}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--vien);border-radius:8px;background:var(--the);color:var(--chu);font:inherit}
+label{display:block;font-size:13px;color:var(--phu);margin:8px 0 3px}
+button{font:inherit;border:0;border-radius:8px;padding:9px 14px;background:var(--chinh);color:#fff;cursor:pointer}
+button.phu{background:transparent;color:var(--chinh);border:1px solid var(--vien)}button:disabled{opacity:.5}
+.hang{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.hang>*{flex:1}
+.dong{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--vien);cursor:pointer}.dong:last-child{border:0}
+.canh{background:#fff6e6;color:#7a4b00;border:1px solid #f0d29a;border-radius:8px;padding:8px 10px;font-size:13px;margin:6px 0}
+@media (prefers-color-scheme:dark){.canh{background:#3a2c10;color:#f3d79c;border-color:#5a4520}}
+#dangnhap{max-width:380px;margin:12vh auto;text-align:center}
+#thongbao{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:9px 14px;border-radius:8px;font-size:14px;display:none;z-index:9;max-width:90vw}
+.an{display:none!important}
+</style>
+</head>
+<body>
+<header><div class="av" id="logo">KTC</div><b>Kiến Thành Công</b><span class="sp"></span><span class="nho" id="tenNguoi" style="color:#dfe7f1"></span><div class="av an" id="avNguoi"></div></header>
+<nav id="menu" class="an"></nav>
+<main id="noidung">
+  <div id="dangnhap" class="the">
+    <h2>Đăng nhập</h2>
+    <p class="nho">Chỉ các Gmail đã được cấp quyền mới vào được.</p>
+    <div id="nutGoogle" style="display:flex;justify-content:center;margin:16px 0"></div>
+    <p class="nho" id="loiDN"></p>
+  </div>
+</main>
+<div id="thongbao"></div>
+<script>
+'use strict';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwlkymttq8kohsqy_tMOh1BSHdj6w3h_szFXAKx1d52MsMeB3PG1IFwFgwl1bOVad41MQ/exec';
+const CLIENT_ID = '419003041557-9t0fo8dapliq3fn64a7t1g7tv5efm5ap.apps.googleusercontent.com';
+let TOKEN = null, ME = null, CACHE = {};
+const $ = s => document.querySelector(s);
+const vnd = n => (Math.round(+n || 0)).toLocaleString('vi-VN');
+const ngay = s => s ? s.split('-').reverse().join('/') : '';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const viet = s => esc(s).split(' ').filter(Boolean);
+const tat = ten => { const w = viet(ten); return ((w[w.length-1]||'?')[0] || '?').toUpperCase(); };
+function bao(t, ms) { const e = $('#thongbao'); e.textContent = t; e.style.display = 'block'; clearTimeout(bao.t); bao.t = setTimeout(() => e.style.display = 'none', ms || 3000); }
+function tag(tt) { const c = tt === 'Đã xong' ? 't-xong' : tt === 'Hủy' ? 't-huy' : 't-dang'; return `<span class="tag ${c}">${esc(tt||'')}</span>`; }
+
+/* ---------- đăng nhập Google ---------- */
+function khoiDong() {
+  if (!window.google || !google.accounts) return setTimeout(khoiDong, 300);
+  google.accounts.id.initialize({ client_id: CLIENT_ID, callback: r => vaoApp(r.credential), auto_select: true, cancel_on_tap_outside: false });
+  google.accounts.id.renderButton($('#nutGoogle'), { theme: 'filled_blue', size: 'large', text: 'signin_with', locale: 'vi' });
+  google.accounts.id.prompt();
+}
+async function vaoApp(cred) {
+  TOKEN = cred;
+  try {
+    ME = await goi('me');
+    $('#tenNguoi').textContent = ME.ten;
+    const av = $('#avNguoi'); av.textContent = tat(ME.ten); av.classList.remove('an');
+    dungMenu(); window.onhashchange = dinhTuyen; dinhTuyen();
+  } catch (e) { $('#loiDN').textContent = e.message; }
+}
+async function goi(action, payload) {
+  if (API_URL.startsWith('DAN_')) throw new Error('App chưa được nối với máy xử lý (thiếu địa chỉ Web app).');
+  const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ token: TOKEN, action, payload: payload || {} }) });
+  const j = await r.json();
+  if (!j.ok) {
+    if (j.code === 'AUTH') { bao('Phiên hết hạn, đang đăng nhập lại…'); google.accounts.id.prompt(); }
+    throw new Error(j.error);
+  }
+  return j.data;
+}
+
+/* ---------- menu theo quyền ---------- */
+const MUC = [
+  ['#/', 'Trang chủ', () => true],
+  ['#/cong-trinh', 'Công trình', q => q.congtrinh],
+  ['#/thu-chi', 'Thu chi', q => q.thuchi],
+  ['#/cong-no', 'Công nợ', q => q.congno],
+  ['#/van-phong', 'Văn phòng', q => q.vanphong],
+  ['#/cho-duyet', 'Chờ duyệt', q => q.choduyet],
+  ['#/danh-ba', 'Danh bạ', q => q.danhba],
+  ['#/he-so', 'Hệ số', q => q.heso],
+  ['#/cai-dat', 'Cài đặt', q => q.caidat]
+];
+function dungMenu() {
+  const m = $('#menu'); m.classList.remove('an');
+  m.innerHTML = MUC.filter(x => x[2](ME.quyen)).map(x => `<a href="${x[0]}">${x[1]}</a>`).join('');
+}
+const TRANG = {};
+async function dinhTuyen() {
+  const h = location.hash || '#/'; const [duong, tham] = h.split('?');
+  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === duong));
+  const nd = $('#noidung'); nd.innerHTML = '<div class="the nho">Đang tải…</div>';
+  try { await (TRANG[duong] || TRANG['#/'])(nd, new URLSearchParams(tham || '')); }
+  catch (e) { nd.innerHTML = `<div class="the canh">${esc(e.message)}</div>`; }
+}
+
+/* ---------- Trang chủ ---------- */
+TRANG['#/'] = async nd => {
+  const d = await goi('trangChu');
+  let h = `<h2>Chào ${esc(ME.ten)}</h2><div class="luoi">`;
+  h += `<div class="the"><div class="nho">Công trình đang làm</div><div class="so">${d.cong_trinh.dang_lam}/${d.cong_trinh.tong}</div></div>`;
+  if (d.thu_thang != null) {
+    h += `<div class="the"><div class="nho">Thu tháng ${d.thang.slice(5)}</div><div class="so">${vnd(d.thu_thang)}</div></div>`;
+    h += `<div class="the"><div class="nho">Chi tháng ${d.thang.slice(5)}</div><div class="so">${vnd(d.chi_thang)}</div></div>`;
+    h += `<div class="the"><div class="nho">Còn phải thu</div><div class="so">${vnd(d.con_phai_thu)}</div></div>`;
+    if (d.tk_cong_ty) h += `<div class="the"><div class="nho">TK công ty (theo sổ)</div><div class="so">${vnd(d.tk_cong_ty.tk_cong_ty)}</div></div>`;
+  }
+  if (d.cho_duyet != null) h += `<a class="the" href="#/cho-duyet" style="text-decoration:none;color:inherit"><div class="nho">Tiến độ chờ duyệt</div><div class="so">${d.cho_duyet}</div></a>`;
+  h += '</div>';
+  if (d.han_nop && d.han_nop.length) h += `<div class="the"><h3>Hạn nộp 30 ngày tới</h3>${d.han_nop.map(x => `<div class="dong"><span>${esc(x.loai)} ${esc(x.ky)}</span><b>${ngay(x.han)}</b></div>`).join('')}</div>`;
+  if (d.cua_toi.length) h += `<div class="the"><h3>Công trình của tôi</h3>${d.cua_toi.map(x => `<div class="dong" onclick="location.hash='#/ct?ma=${x.ma}'"><span>${esc(x.ten)}</span>${tag(x.trang_thai)}</div>`).join('')}</div>`;
+  (d.canh_bao || []).forEach(c => h += `<div class="canh">${esc(c)}</div>`);
+  h += `<p class="nho">Số liệu Excel đọc lúc ${esc(d.luc || '')}</p>`;
+  nd.innerHTML = h;
+};
+
+/* ---------- Công trình ---------- */
+TRANG['#/cong-trinh'] = async nd => {
+  const ds = CACHE.ct = await goi('congTrinh');
+  nd.innerHTML = `<h2>Công trình (${ds.length})</h2><div class="the"><div class="hang"><input id="timCT" placeholder="Tìm tên công trình…">
+    <select id="locCT"><option value="">Tất cả</option><option>Đang làm</option><option>Đã xong</option><option>Hủy</option><option value="toi">Của tôi</option></select></div><div id="dsCT"></div></div>`;
+  const ve = () => {
+    const q = $('#timCT').value.toLowerCase(), l = $('#locCT').value;
+    $('#dsCT').innerHTML = ds.filter(x => (!q || x.ten.toLowerCase().includes(q) || x.ma.toLowerCase().includes(q)) && (!l || (l === 'toi' ? x.cua_toi : x.trang_thai === l)))
+      .map(x => `<div class="dong" onclick="location.hash='#/ct?ma=${x.ma}'"><span><span class="nho">${x.ma}</span> ${esc(x.ten)}${x.thu_muc_id ? '' : ' <span class="tag t-huy">chưa ghép thư mục</span>'}</span>${tag(x.trang_thai)}</div>`).join('') || '<p class="nho">Không có</p>';
+  };
+  $('#timCT').oninput = ve; $('#locCT').onchange = ve; ve();
+};
+TRANG['#/ct'] = async (nd, q) => {
+  const x = await goi('ctChiTiet', { ma: q.get('ma') });
+  let h = `<p><a href="#/cong-trinh">← Công trình</a></p><h2>${esc(x.ten)}</h2><div class="the">
+    <div class="hang"><span class="nho">${x.ma}</span>${tag(x.trang_thai)}</div>
+    <p>Nhận: ${ngay(x.ngay_nhan)} · Chủ trì: ${esc(x.chu_tri)} · Mối: ${esc(x.moi)}</p>
+    <p class="nho">${esc(x.tien_do)}</p>${x.thu_muc_id ? `<a href="https://drive.google.com/drive/folders/${x.thu_muc_id}" target="_blank">Mở thư mục hồ sơ ↗</a>` : '<span class="canh">Chưa ghép thư mục Drive</span>'}</div>`;
+  if (x.tien) {
+    const t = x.tien; h += `<div class="the"><h3>Tiền</h3><table>
+      <tr><td>Giá trị nhận</td><td class="r">${vnd(t.gt_nhan)}</td></tr>` +
+      (t.chi_a != null ? `<tr><td>Chi A</td><td class="r">${vnd(t.chi_a)}</td></tr><tr><td>Thuê người</td><td class="r">${vnd(t.thue_nguoi)}</td></tr>
+      <tr><td>Thuế TNDN / VAT</td><td class="r">${vnd(t.tndn)} / ${vnd(t.vat)}</td></tr><tr><td><b>Còn lại về công ty</b></td><td class="r"><b>${vnd(t.con_lai)}</b></td></tr>` : '') + '</table></div>';
+  }
+  if (x.thu && x.thu.length) h += `<div class="the"><h3>Đã thu (theo sổ)</h3><table>${x.thu.map(t => `<tr><td>${ngay(t.ngay)}</td><td>${esc(t.noi_dung)}</td><td class="r">${vnd(t.tien)}</td></tr>`).join('')}</table></div>`;
+  h += `<div class="the"><h3>Người thực hiện</h3>${x.phan_cong.filter(p => !p.den).map(p => `<div class="dong"><span><span class="av" style="display:inline-grid;width:24px;height:24px;font-size:11px">${tat(p.ten)}</span> ${esc(p.ten)} – ${esc(p.vai)}</span>${ME.vai === 'admin' ? `<button class="phu" onclick="goPC('${x.ma}','${p.ma_nguoi}')">Gỡ</button>` : ''}</div>`).join('') || '<p class="nho">Chưa phân công</p>'}
+    ${ME.vai === 'admin' ? `<div class="hang" style="margin-top:8px"><select id="pcNguoi"></select><select id="pcVai"><option>phụ trách</option><option selected>thực hiện</option><option>xem</option></select><button onclick="themPC('${x.ma}')">Phân công</button></div>` : ''}</div>`;
+  h += `<div class="the"><h3>Tiến độ</h3>${(x.cua_toi || ME.vai === 'admin') ? `<div class="hang"><input id="tdND" placeholder="Nội dung tiến độ"><input id="tdPT" type="number" placeholder="% xong" style="max-width:90px"><button onclick="themTD('${x.ma}')">Lưu</button></div>` : ''}
+    ${x.tien_do_app.map(t => `<div class="dong"><span>${ngay(t.ngay)} · ${esc(t.noi_dung)}</span><span class="nho">${t.pt ? t.pt + '%' : ''} ${esc(t.nguoi)}</span></div>`).join('') || '<p class="nho">Chưa có tiến độ nhập trên app</p>'}</div>`;
+  h += `<div class="the"><h3>File mới sửa</h3>${x.file_moi.map(f => `<div class="dong"><a href="${f.link}" target="_blank">${f.thu_muc ? '📁 ' : ''}${esc(f.ten)}</a><span class="nho">${esc(f.nguoi)} ${f.luc ? new Date(f.luc).toLocaleString('vi-VN') : ''}</span></div>`).join('') || '<p class="nho">Không có</p>'}</div>`;
+  nd.innerHTML = h;
+  if (ME.vai === 'admin') { const db = CACHE.db || (CACHE.db = await goi('danhBa')); $('#pcNguoi').innerHTML = db.map(n => `<option value="${n.ma}">${esc(n.ten)}</option>`).join(''); }
+};
+async function themTD(ma) { const nd = $('#tdND').value.trim(); if (!nd) return bao('Nhập nội dung'); await goi('themTienDo', { ma, noi_dung: nd, pt: $('#tdPT').value }); bao('Đã lưu tiến độ'); dinhTuyen(); }
+async function themPC(ma) { const r = await goi('phanCong', { ma, ma_nguoi: $('#pcNguoi').value, vai: $('#pcVai').value }); bao(r.chia_se ? 'Đã phân công và chia sẻ thư mục' : 'Đã phân công (chưa ghép thư mục nên chưa chia sẻ)', 4000); dinhTuyen(); }
+async function goPC(ma, mn) { if (!confirm('Gỡ phân công và gỡ quyền thư mục do app cấp?')) return; await goi('goPhanCong', { ma, ma_nguoi: mn }); bao('Đã gỡ'); dinhTuyen(); }
+
+/* ---------- Thu chi ---------- */
+TRANG['#/thu-chi'] = async nd => {
+  const d = await goi('thuChi'); const ct = CACHE.ct || (CACHE.ct = await goi('congTrinh'));
+  const thang = [...new Set(d.thu.concat(d.chi).map(x => (x.ngay || '').slice(0, 7)).filter(Boolean))].sort().reverse();
+  nd.innerHTML = `<h2>Thu chi</h2>${(d.canh_bao || []).map(c => `<div class="canh">${esc(c)}</div>`).join('')}
+  <div class="the"><h3>Nhập mới</h3><div class="hang"><select id="tcLoai"><option>Chi</option><option>Thu</option></select><input id="tcNgay" type="date"><input id="tcTien" inputmode="numeric" placeholder="Số tiền"></div>
+  <label>Công trình</label><select id="tcCT"><option value="">(chi chung công ty)</option>${ct.map(x => `<option value="${x.ma}">${x.ma} ${esc(x.ten)}</option>`).join('')}</select>
+  <div class="hang"><div><label>Nội dung</label><input id="tcND"></div><div><label>Đối tượng</label><input id="tcDT"></div><div><label>TK/TM</label><select id="tcTK"><option>TK</option><option>TM</option></select></div></div>
+  <p><button onclick="luuTC()">Lưu</button> <span class="nho">Lưu vào bảng phụ của app; file Excel không bị sửa.</span></p></div>
+  <div class="the"><div class="hang"><select id="tcThang">${thang.map(t => `<option>${t}</option>`).join('')}<option value="">Tất cả</option></select></div><div class="cuon" id="tcDS"></div></div>`;
+  $('#tcNgay').valueAsDate = new Date();
+  const ve = () => {
+    const t = $('#tcThang').value, f = x => !t || (x.ngay || '').startsWith(t);
+    const rows = d.thu.filter(f).map(x => ({ ...x, l: 'Thu' })).concat(d.chi.filter(f).map(x => ({ ...x, l: 'Chi' })))
+      .concat(d.app.filter(f).map(x => ({ ...x, l: x.loai, app: 1 }))).sort((a, b) => (b.ngay || '').localeCompare(a.ngay || ''));
+    const sThu = rows.filter(x => x.l === 'Thu').reduce((s, x) => s + x.tien, 0), sChi = rows.filter(x => x.l === 'Chi').reduce((s, x) => s + x.tien, 0);
+    $('#tcDS').innerHTML = `<p>Thu <b>${vnd(sThu)}</b> · Chi <b>${vnd(sChi)}</b></p><table><tr><th>Ngày</th><th>Nội dung</th><th>Người chi</th><th class="r">Thu</th><th class="r">Chi</th></tr>` +
+      rows.map(x => `<tr><td>${ngay(x.ngay)}</td><td>${esc(x.noi_dung)}${x.app ? ' <span class="tag">app</span>' : ''}${x.trung ? ' <span class="tag t-huy">nghi trùng</span>' : ''}</td><td>${esc(x.nguoi_chi || x.nguoi_nhap || '')}</td><td class="r">${x.l === 'Thu' ? vnd(x.tien) : ''}</td><td class="r">${x.l === 'Chi' ? vnd(x.tien) : ''}</td></tr>`).join('') + '</table>';
+  };
+  $('#tcThang').onchange = ve; ve();
+};
+async function luuTC() {
+  const r = await goi('themThuChi', { loai: $('#tcLoai').value, ngay: $('#tcNgay').value, tien: $('#tcTien').value, ma_ct: $('#tcCT').value, noi_dung: $('#tcND').value, doi_tuong: $('#tcDT').value, tk_tm: $('#tcTK').value });
+  bao(r.trung ? 'Đã lưu – NGHI TRÙNG với ' + r.trung : 'Đã lưu', 5000); dinhTuyen();
+}
+
+/* ---------- Công nợ ---------- */
+TRANG['#/cong-no'] = async nd => {
+  const d = await goi('congNo'); const tong = d.phai_thu.reduce((s, x) => s + x.con_thu, 0);
+  nd.innerHTML = `<h2>Công nợ</h2><div class="the"><h3>Phải thu chủ đầu tư: ${vnd(tong)}</h3><div class="cuon"><table><tr><th>Công trình</th><th class="r">Đã thu</th><th class="r">Còn thu</th></tr>
+  ${d.phai_thu.sort((a, b) => b.con_thu - a.con_thu).map(x => `<tr><td>${esc(x.noi_dung)}<div class="nho">${esc(x.ghi_chu)}</div></td><td class="r">${vnd(x.da_thu)}</td><td class="r"><b>${vnd(x.con_thu)}</b></td></tr>`).join('')}</table></div></div>
+  <p class="nho">Phải trả CTV/đối tác: làm ở bước sau (cần hệ số đã xác nhận).</p>`;
+};
+
+/* ---------- Văn phòng ---------- */
+TRANG['#/van-phong'] = async nd => {
+  const d = await goi('vanPhong'), t = d.tong_hop;
+  const nhap = ME.vai !== 'ketoan';
+  nd.innerHTML = `<h2>Văn phòng</h2><div class="luoi"><div class="the"><div class="nho">Tổng chi</div><div class="so">${vnd(t.tong)}</div></div>
+  <div class="the"><div class="nho">Anh Khuê đã chi</div><div class="so">${vnd(t.theo_nguoi['Khuê'])}</div></div><div class="the"><div class="nho">Anh Tùng đã chi</div><div class="so">${vnd(t.theo_nguoi['Tùng'])}</div></div>
+  <div class="the"><div class="nho">${t.tung_con_phai_tra_khue >= 0 ? 'Anh Tùng còn phải trả anh Khuê' : 'Anh Khuê còn phải trả anh Tùng'}</div><div class="so">${vnd(Math.abs(t.tung_con_phai_tra_khue))}</div></div>
+  <div class="the"><div class="nho">Quỹ của Thư còn</div><div class="so">${vnd(d.quy_thu.con)}</div><div class="nho">Đã cấp ${vnd(d.quy_thu.da_cap)} · đã chi ${vnd(d.quy_thu.da_chi)}</div></div></div>
+  ${nhap ? `<div class="the"><h3>Nhập khoản</h3><div class="hang"><input id="vpNgay" type="date"><input id="vpTien" inputmode="numeric" placeholder="Số tiền"></div>
+    <label>Khoản</label><input id="vpND">${ME.vai === 'admin' ? `<div class="hang"><div><label>Loại</label><select id="vpLoai"><option>chi</option><option>cấp quỹ</option></select></div><div><label>Người chi</label><select id="vpNguoi"><option>Khuê</option><option>Tùng</option><option>quỹ Thư</option></select></div></div>` : ''}
+    <p><button onclick="luuVP()">Lưu</button></p></div>` : ''}
+  <div class="the cuon"><table><tr><th>Ngày</th><th>Khoản</th><th>Người chi</th><th class="r">Số tiền</th></tr>${d.excel.map(x => ({ ...x })).concat(d.app.map(x => ({ ...x, app: 1 })))
+    .sort((a, b) => (b.ngay || '').localeCompare(a.ngay || '')).map(x => `<tr><td>${ngay(x.ngay)}</td><td>${esc(x.noi_dung)}${x.app ? ' <span class="tag">app</span>' : ''}${x.loai === 'cấp quỹ' ? ' <span class="tag">cấp quỹ</span>' : ''}</td><td>${esc(x.nguoi_chi)}</td><td class="r">${vnd(x.tien)}</td></tr>`).join('')}</table></div>`;
+  if (nhap) $('#vpNgay').valueAsDate = new Date();
+};
+async function luuVP() {
+  const p = { ngay: $('#vpNgay').value, tien: $('#vpTien').value, noi_dung: $('#vpND').value };
+  if ($('#vpLoai')) { p.loai = $('#vpLoai').value; p.nguoi_chi = $('#vpNguoi').value; }
+  const r = await goi('themVanPhong', p); bao(r.trung ? 'Đã lưu – nghi trùng ' + r.trung : 'Đã lưu', 4000); dinhTuyen();
+}
+
+/* ---------- Chờ duyệt ---------- */
+TRANG['#/cho-duyet'] = async nd => {
+  const ds = (await goi('choDuyet')).filter(r => r['Trạng thái (chờ/duyệt/bỏ)'] === 'chờ');
+  nd.innerHTML = `<h2>Tiến độ chờ duyệt (${ds.length})</h2>` + (ds.map(r => `<div class="the"><div class="nho">${esc(r['Mã CT'])} · ${esc(r['Nguồn (Zalo/web)'])} · ${esc(r['Thời điểm gốc'])}</div>
+    <p class="nho">“${esc(r['Trích dẫn gốc'])}”</p><textarea id="nd_${r['Mã dòng']}">${esc(r['Nội dung đề xuất'])}</textarea>
+    ${ME.quyen.choduyet > 1 ? `<p class="hang"><button onclick="duyet('${r['Mã dòng']}','duyệt')">Duyệt</button><button class="phu" onclick="duyet('${r['Mã dòng']}','bỏ')">Bỏ</button></p>` : ''}</div>`).join('') || '<div class="the nho">Không có mục chờ duyệt</div>');
+};
+async function duyet(ma, tt) { await goi('duyet', { ma, trang_thai: tt, noi_dung: $('#nd_' + ma).value }); bao(tt === 'duyệt' ? 'Đã duyệt' : 'Đã bỏ'); dinhTuyen(); }
+
+/* ---------- Danh bạ ---------- */
+TRANG['#/danh-ba'] = async nd => {
+  const ds = CACHE.db = await goi('danhBa'), sua = ME.quyen.danhba > 1;
+  nd.innerHTML = `<h2>Danh bạ (${ds.length})</h2><div class="the">${ds.map(n => `<div class="dong"><span style="display:flex;gap:10px;align-items:center"><span class="av">${tat(n.ten)}</span><span><b>${esc(n.ten)}</b><div class="nho">${esc(n.vai_tro)} · ${esc(n.sdt)} · ${esc(n.gmail)}</div></span></span>${n.dang_nhap === 'Có' ? '<span class="tag t-xong">dùng app</span>' : ''}</div>`).join('')}</div>
+  ${sua ? `<div class="the"><h3>Thêm người (CTV, chủ đầu tư, đối tác)</h3><div class="hang"><input id="dbTen" placeholder="Họ tên"><select id="dbVai"><option>Cộng tác viên</option><option>Chủ đầu tư</option><option>Đối tác</option><option>Nhân viên</option></select></div>
+    <div class="hang"><input id="dbSDT" placeholder="SĐT/Zalo"><input id="dbMail" placeholder="Gmail"></div><p><button onclick="luuDB()">Thêm</button></p></div>` : ''}`;
+};
+async function luuDB() { await goi('luuDanhBa', { ten: $('#dbTen').value, vai_tro: $('#dbVai').value, sdt: $('#dbSDT').value, gmail: $('#dbMail').value }); bao('Đã thêm'); dinhTuyen(); }
+
+/* ---------- Hệ số ---------- */
+TRANG['#/he-so'] = async nd => {
+  const ds = await goi('heSo'), sua = ME.quyen.heso > 1;
+  nd.innerHTML = `<h2>Hệ số, tỷ lệ đã thống nhất</h2><div class="the cuon"><table><tr><th>Mã</th><th>Ngày</th><th>Đối tượng</th><th>Việc</th><th>Bên nhận</th><th class="r">%</th><th>Điều kiện</th><th>Trạng thái</th></tr>
+  ${ds.map(r => `<tr><td>${esc(r['Mã HS'])}</td><td>${esc(r['Ngày thống nhất'])}</td><td>${esc(r['Đối tượng'])}</td><td>${esc(r['Loại việc'])}</td><td>${esc(r['Bên nhận'])}</td><td class="r">${esc(r['Tỷ lệ %'])}</td><td>${esc(r['Điều kiện'])}<div class="nho">${esc(r['Nội dung gốc (file Excel)'])}</div></td>
+  <td>${esc(r['Trạng thái'])}${sua && /chờ/i.test(r['Trạng thái']) ? `<br><button class="phu" onclick="xacNhanHS('${r['Mã HS']}')">Xác nhận</button>` : ''}</td></tr>`).join('')}</table></div>`;
+};
+async function xacNhanHS(ma) { await goi('luuHeSo', { 'Mã HS': ma, 'Trạng thái': 'Đã xác nhận ' + new Date().toLocaleDateString('vi-VN') }); bao('Đã xác nhận'); dinhTuyen(); }
+
+/* ---------- Cài đặt ---------- */
+TRANG['#/cai-dat'] = async nd => {
+  nd.innerHTML = `<h2>Cài đặt</h2><div class="the"><p>Đọc lại các file Excel ngay (bình thường app tự đọc 30 phút/lần khi file thay đổi).</p><button id="nutDB">Đọc lại Excel</button></div>
+  <div class="the nho">Phiên bản giao diện 0.1.0</div>`;
+  $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); bao(await goi('dongBoNgay')); $('#nutDB').disabled = false; };
+};
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+khoiDong();
+</script>
+</body>
+</html>
