@@ -205,6 +205,15 @@ const DOC = new Set(['me', 'trangChu', 'congTrinh', 'ctChiTiet', 'thuChi', 'cong
 let NHANH = false, TRUNG = false, EMAIL = '', LUOT = 0;
 const luuDoc = k => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } };
 const luuGhi = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { try { Object.keys(localStorage).filter(x => x.startsWith('ktc:')).forEach(x => localStorage.removeItem(x)); } catch (e2) {} } };
+/* Số liệu lưu sẵn trên máy (để mở nhanh): xóa khi đăng xuất, khi đổi tài khoản, hoặc khi quá 7 ngày không mở app */
+const HAN_LUU = 7 * 864e5;
+const xoaLuuMay = giu => { try { Object.keys(localStorage).filter(k => k.startsWith('ktc:') && !(giu && k.startsWith(giu))).forEach(k => localStorage.removeItem(k)); } catch (e) {} };
+try { const l0 = Number(localStorage.getItem('ktc:luc') || 0); if (l0 && Date.now() - l0 > HAN_LUU) xoaLuuMay(); } catch (e) {}
+function dangXuat() { xoaLuuMay(); CACHE = {}; TOKEN = null; try { google.accounts.id.disableAutoSelect(); } catch (e) {} location.hash = ''; location.reload(); }
+function moTaiKhoan() {
+  moHop(dauHop('Tài khoản') + `<div class="dong" style="cursor:default"><span>${esc(ME && ME.ten || '')}</span><b>${esc(EMAIL)}</b></div><p class="nho">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Nếu 7 ngày không mở app, số liệu lưu sẵn cũng tự xóa.</p><button class="nut" id="nutDX">Đăng xuất</button>`);
+  $('#nutDX').onclick = dangXuat;
+}
 function emailTuToken(t) { try { return JSON.parse(decodeURIComponent(escape(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))))).email || ''; } catch (e) { return ''; } }
 const anhUrl = id => id ? (/^https?:/.test(id) ? id : `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w96`) : '';
 const avTrong = n => { const u = anhUrl(n && n.anh); return tat(n && n.ten) + (u ? `<img src="${u}" alt="" referrerpolicy="no-referrer" loading="lazy" onerror="this.remove()">` : ''); };
@@ -212,9 +221,11 @@ const av = (n, st, cls) => `<span class="av ${cls || ''}"${st ? ` style="${st}"`
 function hienNguoi() {
   $('#tenNguoi').textContent = ME.ten; $('#chucNguoi').textContent = ME.chuc || '';
   $('#avNguoi').innerHTML = $('#avNguoi2').innerHTML = avTrong(ME);
+  [document.querySelector('#ben .nguoi'), $('#avNguoi2')].forEach(e => { if (e) { e.style.cursor = 'pointer'; e.title = 'Tài khoản, đăng xuất'; e.onclick = moTaiKhoan; } });
 }
 async function vaoApp(cred) {
   TOKEN = cred; EMAIL = emailTuToken(cred);
+  if (EMAIL) { xoaLuuMay('ktc:' + EMAIL + ':'); try { localStorage.setItem('ktc:luc', String(Date.now())); } catch (e) {} }
   const batDau = () => { hienNguoi(); ['#ben', '#dau', '#duoi'].forEach(s => $(s).classList.remove('an')); dungMenu(); window.onhashchange = () => dinhTuyen(false); dinhTuyen(false); setTimeout(() => { if (ME.quyen.viec) ['congTrinh', 'viec'].forEach(a => goi(a, {}, true).catch(() => {})); }, 1500); };
   const cu = EMAIL && luuDoc('ktc:' + EMAIL + ':me:{}');
   if (cu) {
@@ -431,8 +442,8 @@ TRANG['#/ct'] = async (nd, q) => {
   if (x.hoat_dong) h += ctDot3Phai(x);
   h += '</div></div>';
   nd.innerHTML = h;
-  if (x.thu_muc_id) goi('fileCT', { ma }).then(fs => { const e = $('#fileCT'); if (e) e.innerHTML = fs.map(f => `<div class="dong" onclick="window.open('${f.link}','_blank')"><div class="chinh"><b>${f.thu_muc ? '📁 ' : ''}${esc(f.ten)}</b><div class="nho">${esc(f.nguoi)} · ${f.luc ? new Date(f.luc).toLocaleString('vi-VN') : ''}</div></div>${ic('mo', 'width:16px;height:16px;color:var(--phu)')}</div>`).join('') || '<div class="rong nho">Không có file</div>'; }).catch(e => { const el = $('#fileCT'); if (el) el.innerHTML = `<div class="rong nho">${esc(e.message)}</div>`; });
-  if (adm) { const db = CACHE.db || (CACHE.db = await goi('danhBa')); if ($('#pcNguoi')) $('#pcNguoi').innerHTML = db.filter(n => n.trang_thai !== 'Nghỉ').map(n => `<option value="${n.ma}">${esc(n.ten)}${n.vai_tro ? ' – ' + esc(n.vai_tro) : ''}</option>`).join(''); }
+  if (x.thu_muc_id) goi('fileCT', { ma }).then(fs => { const e = $('#fileCT'); if (e) e.innerHTML = fs.map(f => `<div class="dong" data-l="${esc(/^https:\/\//.test(f.link || '') ? f.link : '')}" onclick="if(this.dataset.l)window.open(this.dataset.l,'_blank','noopener')"><div class="chinh"><b>${f.thu_muc ? '📁 ' : ''}${esc(f.ten)}</b><div class="nho">${esc(f.nguoi)} · ${f.luc ? new Date(f.luc).toLocaleString('vi-VN') : ''}</div></div>${ic('mo', 'width:16px;height:16px;color:var(--phu)')}</div>`).join('') || '<div class="rong nho">Không có file</div>'; }).catch(e => { const el = $('#fileCT'); if (el) el.innerHTML = `<div class="rong nho">${esc(e.message)}</div>`; });
+  if (adm) { const db = CACHE.db || (CACHE.db = await goi('danhBa')); if ($('#pcNguoi')) $('#pcNguoi').innerHTML = db.filter(n => n.trang_thai !== 'Nghỉ').map(n => `<option value="${esc(n.ma)}">${esc(n.ten)}${n.vai_tro ? ' – ' + esc(n.vai_tro) : ''}</option>`).join(''); }
 };
 async function themTD(ma) { const nd = $('#tdND').value.trim(); if (!nd) return bao('Nhập nội dung'); await goi('themTienDo', { ma, noi_dung: nd, pt: $('#tdPT').value }); bao('Đã lưu tiến độ'); dinhTuyen(true); }
 async function themPC(ma) { const r = await goi('phanCong', { ma, ma_nguoi: $('#pcNguoi').value, vai: $('#pcVai').value, han: $('#pcHan').value }); bao(r.chia_se ? 'Đã phân công và chia sẻ thư mục' : 'Đã phân công (chưa có thư mục nên chưa chia sẻ)', 4000); dinhTuyen(true); }
@@ -549,7 +560,7 @@ TRANG['#/danh-ba'] = async nd => {
   const ve = () => {
     const q = $('#dbTim').value.toLowerCase(), l = $('#dbLoc').value;
     $('#dbDS').innerHTML = `<div class="luoi" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr))">${ds.filter(n => (!q || (n.ten + ' ' + n.sdt).toLowerCase().includes(q)) && (!l || (n.vai_tro || 'Khác') === l))
-      .map(n => `<a class="the" href="#/nguoi?ma=${n.ma}" style="margin:0;text-decoration:none;display:block"><div style="display:flex;gap:12px;align-items:center">${av(n, 'width:46px;height:46px;font-size:16px')}<div style="min-width:0;flex:1"><b>${esc(n.ten)}</b><div class="nho">${esc(n.vai_tro || '')}${n.trang_thai ? ' · ' + esc(n.trang_thai) : ''}</div><div class="nho">${esc(n.sdt || '')}</div></div>${n.dang_nhap === 'Có' ? '<span class="tag t-xong">dùng app</span>' : ''}</div>${chipCS(n.cs)}</a>`).join('') || '<div class="rong">Không có ai phù hợp</div>'}</div>`;
+      .map(n => `<a class="the" href="#/nguoi?ma=${esc(encodeURIComponent(n.ma))}" style="margin:0;text-decoration:none;display:block"><div style="display:flex;gap:12px;align-items:center">${av(n, 'width:46px;height:46px;font-size:16px')}<div style="min-width:0;flex:1"><b>${esc(n.ten)}</b><div class="nho">${esc(n.vai_tro || '')}${n.trang_thai ? ' · ' + esc(n.trang_thai) : ''}</div><div class="nho">${esc(n.sdt || '')}</div></div>${n.dang_nhap === 'Có' ? '<span class="tag t-xong">dùng app</span>' : ''}</div>${chipCS(n.cs)}</a>`).join('') || '<div class="rong">Không có ai phù hợp</div>'}</div>`;
   };
   $('#dbTim').oninput = ve; $('#dbLoc').onchange = ve; ve();
 };
@@ -693,8 +704,8 @@ TRANG['#/viec'] = async (nd, q) => {
   const mo = d.viec.filter(v => v.tt !== 'Xong'), tre = mo.filter(v => v.tre).length;
   nd.innerHTML = tieuDe('Công việc', `${mo.length} việc đang mở${tre ? ` · <b style="color:#b42318">${tre} quá hạn</b>` : ''} · việc xong giữ 90 ngày`, `<button class="nut vang" style="flex:none" onclick="moFormViec()">+ Giao việc</button>`) +
     `<div class="hang" style="margin-bottom:14px"><div class="tab" id="vTab"><button data-t="toi">Việc của tôi</button><button data-t="bang">Bảng</button><button data-t="ds">Danh sách</button></div>
-      <select id="vCT" style="max-width:320px"><option value="">Tất cả công trình</option><option value="-">Việc chung (không thuộc công trình)</option>${[...new Map(d.viec.filter(v => v.ma_ct).map(v => [v.ma_ct, v.ten_ct])).entries()].map(([m, t]) => `<option value="${m}">${esc(t)}</option>`).join('')}</select>
-      <select id="vNg" style="max-width:220px"><option value="">Tất cả mọi người</option>${[...new Map(d.viec.filter(v => v.ma_nguoi).map(v => [v.ma_nguoi, v.nguoi])).entries()].map(([m, t]) => `<option value="${m}">${esc(t)}</option>`).join('')}</select></div><div id="vND"></div>`;
+      <select id="vCT" style="max-width:320px"><option value="">Tất cả công trình</option><option value="-">Việc chung (không thuộc công trình)</option>${[...new Map(d.viec.filter(v => v.ma_ct).map(v => [v.ma_ct, v.ten_ct])).entries()].map(([m, t]) => `<option value="${esc(m)}">${esc(t)}</option>`).join('')}</select>
+      <select id="vNg" style="max-width:220px"><option value="">Tất cả mọi người</option>${[...new Map(d.viec.filter(v => v.ma_nguoi).map(v => [v.ma_nguoi, v.nguoi])).entries()].map(([m, t]) => `<option value="${esc(m)}">${esc(t)}</option>`).join('')}</select></div><div id="vND"></div>`;
   $('#vCT').value = VLOC.ct; if ($('#vCT').value !== VLOC.ct) VLOC.ct = '';
   $('#vNg').value = VLOC.nguoi; if ($('#vNg').value !== VLOC.nguoi) VLOC.nguoi = '';
   $('#vCT').onchange = e => { VLOC.ct = e.target.value; veViec(); };
@@ -780,7 +791,7 @@ async function moFormViec(ma, maCT) {
   HOPV = cu;
   moHop(dauHop(ma ? 'Sửa việc' : 'Giao việc mới') + (du ? `<label>Tên việc</label><input id="fvTen" value="${esc(v.ten)}" placeholder="VD: Vẽ trắc dọc tuyến 1">
     <div class="hang"><div style="flex:2"><label>Công trình</label><select id="fvCT"><option value="">Việc chung (không thuộc công trình)</option>${ct.map(c => `<option value="${c.ma}"${c.ma === v.ma_ct ? ' selected' : ''}>${esc(c.ten)}</option>`).join('')}</select></div><div><label>Mốc giai đoạn</label><select id="fvMoc"></select></div></div>
-    <div class="hang"><div style="flex:2"><label>Người làm</label><select id="fvNg"><option value="">Chưa giao ai</option>${d.nguoi.map(n => `<option value="${n.ma}"${n.ma === v.ma_nguoi ? ' selected' : ''}>${esc(n.ten)}${n.vai_tro ? ' – ' + esc(n.vai_tro) : ''}</option>`).join('')}</select></div><div><label>Hạn</label><input id="fvHan" type="date" value="${v.han || ''}"></div><div><label>Ưu tiên</label><select id="fvUT"><option value="">Thường</option><option${v.uu_tien === 'Gấp' ? ' selected' : ''}>Gấp</option></select></div></div>` : `<p style="margin:0 0 4px"><b>${esc(v.ten)}</b></p><p class="nho" style="margin:0">Tên việc, người làm, hạn do người giao việc sửa.</p>`) +
+    <div class="hang"><div style="flex:2"><label>Người làm</label><select id="fvNg"><option value="">Chưa giao ai</option>${d.nguoi.map(n => `<option value="${esc(n.ma)}"${n.ma === v.ma_nguoi ? ' selected' : ''}>${esc(n.ten)}${n.vai_tro ? ' – ' + esc(n.vai_tro) : ''}</option>`).join('')}</select></div><div><label>Hạn</label><input id="fvHan" type="date" value="${v.han || ''}"></div><div><label>Ưu tiên</label><select id="fvUT"><option value="">Thường</option><option${v.uu_tien === 'Gấp' ? ' selected' : ''}>Gấp</option></select></div></div>` : `<p style="margin:0 0 4px"><b>${esc(v.ten)}</b></p><p class="nho" style="margin:0">Tên việc, người làm, hạn do người giao việc sửa.</p>`) +
     `<label>Mô tả, yêu cầu</label><textarea id="fvMT" rows="3">${esc(v.mo_ta)}</textarea>
     <label>Đường dẫn file hoặc thư mục Drive</label><input id="fvLink" value="${esc(v.link)}" placeholder="https://drive.google.com/…">
     ${ma ? '' : '<label>Các bước (mỗi dòng một bước, không bắt buộc)</label><textarea id="fvCL" rows="3" placeholder="Đo hiện trạng&#10;Vẽ nháp&#10;Kiểm tra nội bộ"></textarea>'}
@@ -845,7 +856,7 @@ function luuMoc(ma, tt) {
 async function moBienBan(maCT) {
   moHop('<div class="rong">Đang tải…</div>');
   const d = await duLieuViec();
-  CACHE.nguoiOpt = d.nguoi.map(n => `<option value="${n.ma}">${esc(n.ten)}</option>`).join('');
+  CACHE.nguoiOpt = d.nguoi.map(n => `<option value="${esc(n.ma)}">${esc(n.ten)}</option>`).join('');
   moHop(dauHop('Ghi biên bản họp / làm việc') + `<div class="hang"><div><label>Ngày</label><input id="bbNgay" type="date" value="${homNay()}"></div><div style="flex:3"><label>Tiêu đề</label><input id="bbTD" placeholder="VD: Họp với chủ đầu tư về phương án tuyến"></div></div>
     <label>Thành phần</label><input id="bbTP" placeholder="Ai dự họp">
     <label>Nội dung chính</label><textarea id="bbND" rows="3"></textarea>
@@ -927,7 +938,7 @@ TRANG['#/hieu-suat'] = async nd => {
       <div class="kpi toi"><div class="nhan">Chờ kiểm tra</div><div class="so">${t.cho_kt}</div></div>
       <div class="kpi xanh"><div class="nhan">Xong đúng hạn</div><div class="so">${t.dung_han_pt == null ? '—' : t.dung_han_pt + '%'}</div><div class="them">${t.co_han ? t.dung_han + '/' + t.co_han + ' việc có hạn đã xong' : 'Chưa có việc có hạn nào xong'}</div></div></div>
     <div class="the"><h3>Từng người</h3><div class="cuon"><table class="bang co-the"><thead><tr><th>Người</th><th style="min-width:150px">Đang mở</th><th class="r">Hạn 7 ngày</th><th class="r">Quá hạn</th><th class="r">Chờ kiểm tra</th><th class="r">Xong 30 ngày</th><th class="r">Đúng hạn</th><th class="r">Chất lượng</th><th class="r">Năng lực</th></tr></thead><tbody>
-    ${d.nguoi.map(n => `<tr style="cursor:pointer" onclick="location.hash='#/nguoi?ma=${n.ma}'"><td data-n="Người"><span style="display:inline-flex;gap:8px;align-items:center">${av(n, 'width:28px;height:28px;font-size:11px')}<b style="font-weight:600">${esc(n.ten)}</b></span></td>
+    ${d.nguoi.map(n => `<tr style="cursor:pointer" onclick="location.hash='#/nguoi?ma=${esc(encodeURIComponent(n.ma))}'"><td data-n="Người"><span style="display:inline-flex;gap:8px;align-items:center">${av(n, 'width:28px;height:28px;font-size:11px')}<b style="font-weight:600">${esc(n.ten)}</b></span></td>
       <td data-n="Đang mở"><span style="display:flex;gap:8px;align-items:center;justify-content:flex-end"><span class="thanh" style="flex:1;min-width:60px"><i style="width:${Math.round(100 * n.mo / max)}%"></i></span><b>${n.mo}</b></span></td>
       <td class="r" data-n="Hạn 7 ngày">${n.sap}</td><td class="r" data-n="Quá hạn">${n.tre ? `<b style="color:#b42318">${n.tre}</b>` : '0'}</td><td class="r" data-n="Chờ kiểm tra">${n.cho_kt}</td><td class="r" data-n="Xong 30 ngày">${n.xong_30}</td>
       <td class="r" data-n="Đúng hạn">${n.dung_han_pt == null ? '—' : n.dung_han_pt + '% <span class="nho">(' + n.dung_han + '/' + n.co_han + ')</span>'}</td><td class="r" data-n="Chất lượng">${n.diem_tb == null ? '—' : n.diem_tb + '/5'}</td><td class="r" data-n="Năng lực">${n.nang_luc == null ? '—' : n.nang_luc}</td></tr>`).join('') || '<tr><td colspan="9" class="rong">Chưa có việc hay phân công nào</td></tr>'}</tbody></table></div>
@@ -962,11 +973,12 @@ TRANG['#/he-thong'] = async nd => {
       <div class="kpi toi"><div class="nhan">Nhiều người nhất trong 1 giờ</div><div class="so">${s.nguoi_max}</div><div class="them">ngưỡng nâng cấp 15 người</div></div>
       <div class="kpi ${s.loi || s.han_muc ? 'do' : 'xanh'}"><div class="nhan">Lỗi hệ thống 7 ngày</div><div class="so">${s.loi}</div><div class="them">${s.han_muc} lỗi hạn mức · ${s.ban} lần chờ khóa</div></div></div>
     <div class="the"><h3>Theo ngày</h3><div class="cuon"><table class="bang co-the"><thead><tr><th>Ngày</th><th class="r">Lượt gọi</th><th class="r">Người (giờ đông nhất)</th><th class="r">Máy xử lý TB</th><th class="r">Người dùng chờ TB</th><th class="r">Chờ lâu nhất</th><th class="r">Lượt trên 3 s</th><th class="r">Từ bộ nhớ đệm</th><th class="r">Lỗi</th></tr></thead><tbody>
-      ${d.ngay.slice().reverse().map(n => `<tr><td data-n="Ngày">${ngay(n.ngay)}</td><td class="r" data-n="Lượt gọi">${n.luot}</td><td class="r" data-n="Người">${n.nguoi}</td><td class="r" data-n="Máy xử lý TB">${n.may_tb == null ? '—' : n.may_tb + ' ms'}</td><td class="r" data-n="Người dùng chờ TB">${n.kh_tb == null ? '—' : `<b${n.kh_tb > 3000 ? ' style="color:#b42318"' : ''}>${giay(n.kh_tb)}</b>`}</td><td class="r" data-n="Chờ lâu nhất">${n.kh_n ? giay(n.kh_max) : '—'}</td><td class="r" data-n="Lượt trên 3 s">${n.cham}${n.kh_n ? ' / ' + n.kh_n : ''}</td><td class="r" data-n="Từ bộ nhớ đệm">${n.luot ? Math.round(100 * n.dem / n.luot) + '%' : '—'}</td><td class="r" data-n="Lỗi">${n.loi ? `<b style="color:#b42318" title="${esc(n.loi_gan)}">${n.loi}</b>` : '0'}</td></tr>`).join('') || '<tr><td colspan="9" class="rong">Chưa có số đo. Số đo ghi xuống bảng mỗi 30 phút.</td></tr>'}</tbody></table></div>
+      ${d.ngay.slice().reverse().map(n => `<tr><td data-n="Ngày">${ngay(n.ngay)}</td><td class="r" data-n="Lượt gọi">${n.luot}</td><td class="r" data-n="Người">${esc(n.nguoi)}</td><td class="r" data-n="Máy xử lý TB">${n.may_tb == null ? '—' : n.may_tb + ' ms'}</td><td class="r" data-n="Người dùng chờ TB">${n.kh_tb == null ? '—' : `<b${n.kh_tb > 3000 ? ' style="color:#b42318"' : ''}>${giay(n.kh_tb)}</b>`}</td><td class="r" data-n="Chờ lâu nhất">${n.kh_n ? giay(n.kh_max) : '—'}</td><td class="r" data-n="Lượt trên 3 s">${n.cham}${n.kh_n ? ' / ' + n.kh_n : ''}</td><td class="r" data-n="Từ bộ nhớ đệm">${n.luot ? Math.round(100 * n.dem / n.luot) + '%' : '—'}</td><td class="r" data-n="Lỗi">${n.loi ? `<b style="color:#b42318" title="${esc(n.loi_gan)}">${n.loi}</b>` : '0'}</td></tr>`).join('') || '<tr><td colspan="9" class="rong">Chưa có số đo. Số đo ghi xuống bảng mỗi 30 phút.</td></tr>'}</tbody></table></div>
       ${d.ngay.some(n => n.loi_gan) ? `<p class="nho" style="margin:10px 0 0">Lỗi gần nhất: ${esc(d.ngay.filter(n => n.loi_gan).pop().loi_gan)}</p>` : ''}</div>
     <div class="hai"><div class="the"><h3>Thao tác nặng nhất</h3><table class="bang"><thead><tr><th>Thao tác</th><th class="r">Lượt</th><th class="r">TB</th><th class="r">Lâu nhất</th></tr></thead><tbody>${d.api.map(a => `<tr><td>${esc(a.ten)}</td><td class="r">${a.luot}</td><td class="r">${a.tb} ms</td><td class="r">${a.max} ms</td></tr>`).join('') || '<tr><td colspan="4" class="rong">Chưa có số đo</td></tr>'}</tbody></table><p class="nho" style="margin:8px 0 0">Thời gian máy xử lý, chưa gồm đường truyền.</p></div>
       <div><div class="the"><h3>Kích thước dữ liệu</h3>${d.bang.slice().sort((a, b) => b.dong - a.dong).slice(0, 10).map(b => `<div class="dong" style="cursor:default"><span>${esc(b.ten)}</span><b${b.dong > 5000 ? ' style="color:#b42318"' : ''}>${b.dong.toLocaleString('vi-VN')} dòng</b></div>`).join('')}${d.excel ? `<p class="nho" style="margin:8px 0 0">Sổ Excel đọc lúc ${esc(d.excel.luc)}: ${d.excel.thu} dòng thu, ${d.excel.chi} dòng chi, ${d.excel.ct} công trình, ${d.excel.vp} khoản văn phòng.</p>` : ''}</div>
       <div class="the"><h3>Tự kiểm</h3><div class="dong" style="cursor:default"><span>Khóa chống ghi đè</span><b>${esc(d.tu_kiem.khoa)}</b></div><div class="dong" style="cursor:default"><span>Bộ nhớ đệm</span><b>${esc(d.tu_kiem.dem)}</b></div><div class="dong" style="cursor:default"><span>Phiên bản máy xử lý</span><b>${esc(d.tu_kiem.phien_ban)}</b></div></div></div></div>
+    <div class="the"><h3>Ai đã xem mục tài chính (14 ngày gần nhất)</h3><p class="nho" style="margin-top:-6px">Ghi theo giờ. Lượt đăng nhập bị từ chối hôm nay: <b>${esc(d.tu_choi || 0)}</b>.</p><table class="bang"><thead><tr><th>Giờ</th><th>Người</th><th>Mục</th><th class="r">Lượt</th></tr></thead><tbody>${(d.xem || []).map(x => `<tr><td data-n="Giờ">${esc(String(x.gio).slice(8, 10) + '/' + String(x.gio).slice(5, 7) + ' ' + String(x.gio).slice(11, 16))}</td><td data-n="Người">${esc(x.email)}</td><td data-n="Mục">${esc(({ thuChi: 'Thu chi', congNo: 'Công nợ', bangLuong: 'Bảng lương', heSo: 'Hệ số', vanPhong: 'Văn phòng' })[x.muc] || x.muc)}</td><td class="r" data-n="Lượt">${esc(x.n)}</td></tr>`).join('') || '<tr><td colspan="4" class="rong">Chưa có lượt xem nào được ghi</td></tr>'}</tbody></table></div>
     <div class="the nho"><b>Ngưỡng kiến nghị</b> (ghi trong tài liệu Lộ trình, Đợt 9). Nên nâng lên database khi có một trong các dấu hiệu: từ 3 ngày trong 7 ngày người dùng chờ trung bình trên 3 giây; từ 15 người dùng trong cùng 1 giờ; từ 3 lỗi hạn mức của Google; từ 10 lần phải chờ vì nhiều người lưu cùng lúc. Chạm một nửa các ngưỡng này thì app báo “Theo dõi sát”.</div>`;
   $('#htLamMoi').onclick = async () => { await goi('lamMoi'); bao('Đã làm mới. Số liệu các trang sẽ đọc lại từ bảng.'); dinhTuyen(true); };
 };
@@ -975,8 +987,10 @@ TRANG['#/he-thong'] = async nd => {
 TRANG['#/cai-dat'] = async nd => {
   nd.innerHTML = tieuDe('Cài đặt') + `<div class="the"><h3>Số liệu Excel</h3><p class="nho" style="margin-top:-6px">App tự đọc lại 30 phút/lần khi file Excel thay đổi. Bấm để đọc ngay.</p><button class="nut" id="nutDB">Đọc lại Excel ngay</button></div>
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
+  <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.5.2 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.5.4 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
 
