@@ -108,9 +108,9 @@ label{display:block;font-size:12.5px;color:var(--phu);font-weight:500;margin:10p
 .vc b{font-weight:600;display:block;line-height:1.35}
 .vc .duoi{display:flex;justify-content:space-between;align-items:center;gap:6px 8px;margin-top:8px;flex-wrap:wrap}.vc .duoi .nho{white-space:nowrap}
 .t-vang{background:var(--vangnhat);color:#7a5a00}
-.moc{display:flex;gap:3px;margin:8px 0}.moc i{flex:1;height:8px;border-radius:99px;background:#e4e7ec}.moc i.x{background:var(--xanh)}.moc i.d{background:var(--vang)}.moc i.t{background:var(--do)}
+.moc{display:flex;gap:3px;margin:8px 0}.moc i{flex:1;height:8px;border-radius:99px;background:#e4e7ec}.moc i.x{background:var(--xanh)}.moc i.d{background:var(--vang)}.moc i.t{background:var(--do)}.moc i.q{background:repeating-linear-gradient(135deg,#d5d9e0 0 3px,#fff 3px 6px)}
 .sott{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:#eef0f3;color:#475467;flex:none}
-.sott.x{background:var(--xanh);color:#fff}.sott.d{background:var(--vang);color:var(--toi)}.sott.t{background:var(--do);color:#fff}
+.sott.x{background:var(--xanh);color:#fff}.sott.d{background:var(--vang);color:var(--toi)}.sott.t{background:var(--do);color:#fff}.sott.q{background:#fff;border:1px dashed #98a2b3;color:#98a2b3}
 #hop{position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:14;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:28px 12px}
 #hop>div{background:#fff;border-radius:14px;width:min(700px,100%);padding:18px 20px 20px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
 #hop h2{margin:0 0 10px;font-size:18px}
@@ -798,14 +798,18 @@ async function luuFormViec(ma) {
 }
 
 /* ---------- mốc giai đoạn ---------- */
-function lopMoc(moc) { const hn = homNay(); let gap = false; return moc.map(m => { if (m.xong) return 'x'; const tre = m.han && m.han < hn; if (!gap) { gap = true; return tre ? 't' : 'd'; } return tre ? 't' : ''; }); }
+function lopMoc(moc) {   // x = xong, d = mốc hiện tại (ngay sau mốc xa nhất đã xong), t = trễ hạn, q = nằm trước mốc đã xong nhưng chưa có căn cứ
+  const hn = homNay(); let cuoi = -1; moc.forEach((m, i) => { if (m.xong) cuoi = i; });
+  return moc.map((m, i) => { if (m.xong) return 'x'; if (i < cuoi) return 'q'; const tre = m.han && m.han < hn; return tre ? 't' : i === cuoi + 1 ? 'd' : ''; });
+}
 const mocThanh = moc => { const l = lopMoc(moc); return `<div class="moc" role="img" aria-label="${l.filter(c => c === 'x').length}/${moc.length} mốc đã xong">${moc.map((m, i) => `<i class="${l[i]}" title="${esc(m.moc)}"></i>`).join('')}</div>`; };
 function duBaoChu(db) {
   if (!db) return '';
-  if (db.xong === db.tong) return `Đã xong ${db.tong}/${db.tong} mốc${db.du_bao ? ' · ngày ' + ngay(db.du_bao) : ''}`;
-  let s = `${db.xong}/${db.tong} mốc · đang ở <b>${esc(db.hien_tai)}</b>`;
+  const thieu = db.bo_qua ? ` · <span class="tag t-xam">${db.bo_qua} mốc trước chưa có căn cứ</span>` : '';
+  if (!db.hien_tai) return `Đã xong mốc cuối (${db.xong}/${db.tong} mốc)${db.du_bao ? ' · ngày ' + ngay(db.du_bao) : ''}${thieu}`;
+  let s = `${db.xong}/${db.tong} mốc · đang ở <b>${esc(db.hien_tai)}</b>${thieu}`;
   if (db.du_bao) s += ` · dự báo xong <b>${ngay(db.du_bao)}</b>${db.lech > 0 ? ` <span class="tag t-huy">trễ ${db.lech} ngày so với hạn</span>` : db.lech != null ? ' <span class="tag t-xong">kịp hạn</span>' : ''}`;
-  else s += ' · chưa đủ dữ liệu để dự báo (cần hạn mốc cuối hoặc ít nhất 1 mốc đã xong)';
+  else s += ' · chưa đủ dữ liệu để dự báo (cần hạn mốc cuối, hoặc từ 2 mốc có ngày xong)';
   return s;
 }
 function theMoc(x) {
@@ -816,7 +820,7 @@ function theMoc(x) {
     ${mocThanh(x.moc)}<div class="nho" style="margin-bottom:8px">${duBaoChu(x.du_bao)}</div>
     ${adm ? `<div id="mocDatLai" class="an hang" style="margin-bottom:10px">${chon(x.cac_loai_moc)}<button class="nut phu" onclick="ganMoc('${x.ma}',true)">Đổi sang bộ mốc này</button></div>` : ''}
     ${x.moc.map((m, i) => `<div class="dong"${x.sua_moc ? ` onclick="moMoc('${x.ma}',${m.thu_tu})"` : ' style="cursor:default"'}><div style="display:flex;gap:10px;align-items:center;min-width:0"><span class="sott ${l[i]}">${m.xong ? '✓' : m.thu_tu}</span><div class="chinh"><b>${esc(m.moc)}</b>${m.ghi_chu ? `<div class="nho">${esc(m.ghi_chu)}</div>` : ''}</div></div>
-      <span style="display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">${m.xong ? `<span class="tag t-xong">xong ${ngayNgan(m.xong)}</span>` : ''}${m.han ? `<span class="tag ${!m.xong && l[i] === 't' ? 't-huy' : 't-xam'}">hạn ${ngayNgan(m.han)}</span>` : (m.xong ? '' : '<span class="nho">chưa có hạn</span>')}</span></div>`).join('')}
+      <span style="display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">${m.xong ? (/^Suy ra/.test(m.ghi_chu) ? '<span class="tag t-xam">đã qua (suy ra)</span>' : `<span class="tag t-xong">xong ${ngayNgan(m.xong)}</span>`) : ''}${m.han ? `<span class="tag ${!m.xong && l[i] === 't' ? 't-huy' : 't-xam'}">hạn ${ngayNgan(m.han)}</span>` : (m.xong ? '' : l[i] === 'q' ? '<span class="nho">chưa có căn cứ</span>' : '<span class="nho">chưa có hạn</span>')}</span></div>`).join('')}
     <p class="nho" style="margin:8px 0 0">${x.sua_moc ? 'Bấm vào một mốc để ghi ngày xong' + (adm ? ', đặt hạn.' : '.') : ''} Dự báo: ${esc(x.du_bao && x.du_bao.cach || '')}</p></div>`;
 }
 function ganMoc(ma, datLai) {
@@ -928,8 +932,8 @@ TRANG['#/hieu-suat'] = async nd => {
       <td class="r" data-n="Hạn 7 ngày">${n.sap}</td><td class="r" data-n="Quá hạn">${n.tre ? `<b style="color:#b42318">${n.tre}</b>` : '0'}</td><td class="r" data-n="Chờ kiểm tra">${n.cho_kt}</td><td class="r" data-n="Xong 30 ngày">${n.xong_30}</td>
       <td class="r" data-n="Đúng hạn">${n.dung_han_pt == null ? '—' : n.dung_han_pt + '% <span class="nho">(' + n.dung_han + '/' + n.co_han + ')</span>'}</td><td class="r" data-n="Chất lượng">${n.diem_tb == null ? '—' : n.diem_tb + '/5'}</td><td class="r" data-n="Năng lực">${n.nang_luc == null ? '—' : n.nang_luc}</td></tr>`).join('') || '<tr><td colspan="9" class="rong">Chưa có việc hay phân công nào</td></tr>'}</tbody></table></div>
     <p class="nho" style="margin:10px 0 0">Đúng hạn = số việc xong không trễ hạn / số việc có hạn đã xong. Chất lượng = điểm trung bình người giao chấm. Năng lực = 40% chất lượng + 30% đúng hạn + 30% độ khó công trình.</p></div>
-    <div class="the"><h3>Dự báo ngày xong công trình</h3>${db.map(c => `<div class="dong" onclick="location.hash='#/ct?ma=${c.ma}'"><div class="chinh"><b style="font-weight:500">${esc(c.ten)}</b><div class="nho">${c.du_bao.xong}/${c.du_bao.tong} mốc · đang ở ${esc(c.du_bao.hien_tai)}${c.du_bao.han_cuoi ? ' · hạn mốc cuối ' + ngay(c.du_bao.han_cuoi) : ''}</div></div><span style="flex:none;text-align:right"><b>${ngay(c.du_bao.du_bao)}</b><div>${c.du_bao.lech > 0 ? `<span class="tag t-huy">trễ ${c.du_bao.lech} ngày</span>` : c.du_bao.lech != null ? '<span class="tag t-xong">kịp hạn</span>' : '<span class="tag t-xam">ước theo tốc độ</span>'}</div></span></div>`).join('') || '<div class="rong nho">Chưa đủ dữ liệu. Cần gắn mốc và đặt hạn mốc cuối, hoặc đã xong ít nhất 1 mốc.</div>'}
-    <p class="nho" style="margin:10px 0 0">Cách dự báo: hạn mốc cuối cộng số ngày đang lệch ở mốc hiện tại. Công trình chưa đặt hạn thì lấy tốc độ trung bình các mốc đã xong.</p></div>`;
+    <div class="the"><h3>Dự báo ngày xong công trình</h3>${db.map(c => `<div class="dong" onclick="location.hash='#/ct?ma=${c.ma}'"><div class="chinh"><b style="font-weight:500">${esc(c.ten)}</b><div class="nho">${c.du_bao.xong}/${c.du_bao.tong} mốc · đang ở ${esc(c.du_bao.hien_tai)}${c.du_bao.han_cuoi ? ' · hạn mốc cuối ' + ngay(c.du_bao.han_cuoi) : ''}</div></div><span style="flex:none;text-align:right"><b>${ngay(c.du_bao.du_bao)}</b><div>${c.du_bao.lech > 0 ? `<span class="tag t-huy">trễ ${c.du_bao.lech} ngày</span>` : c.du_bao.lech != null ? '<span class="tag t-xong">kịp hạn</span>' : '<span class="tag t-xam">ước theo tốc độ</span>'}</div></span></div>`).join('') || '<div class="rong nho">Chưa đủ dữ liệu. Cần đặt hạn mốc cuối, hoặc có từ 2 mốc ghi ngày xong.</div>'}
+    <p class="nho" style="margin:10px 0 0">Cách dự báo: hạn mốc cuối cộng số ngày đang lệch ở mốc hiện tại. Công trình chưa đặt hạn thì ước theo tốc độ từ ngày nhận đến mốc xong gần nhất, nên chỉ để tham khảo.</p></div>`;
 };
 
 /* ---------- trang Mẫu & quy trình ---------- */
@@ -972,7 +976,7 @@ TRANG['#/cai-dat'] = async nd => {
   nd.innerHTML = tieuDe('Cài đặt') + `<div class="the"><h3>Số liệu Excel</h3><p class="nho" style="margin-top:-6px">App tự đọc lại 30 phút/lần khi file Excel thay đổi. Bấm để đọc ngay.</p><button class="nut" id="nutDB">Đọc lại Excel ngay</button></div>
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.5.0 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.5.2 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
 
