@@ -397,12 +397,12 @@ TRANG['#/cong-trinh'] = async nd => {
       sua ? `<button class="nut vang" style="flex:none" onclick="$('#ctForm').classList.toggle('an')">+ Thêm công trình</button>` : '') + (sua ? formThemCT() : '') +
     `<div class="the"><div class="hang" style="margin-bottom:10px"><input id="timCT" placeholder="Tìm tên công trình, mối, chủ trì…" style="flex:3">
     <select id="locCT"><option value="">Tất cả trạng thái</option><option>Đang làm</option><option>Đã xong</option><option>Hủy</option><option value="toi">Của tôi</option><option value="app">Chỉ có trên app</option></select></div>
-    <div class="cuon"><table class="bang co-the"><thead><tr><th>Ngày nhận</th><th>Công trình</th><th>Chủ trì</th><th>Mối</th>${ME.quyen.hopdong ? '<th class="r">Giá trị nhận</th>' : ''}<th>Nhóm Zalo</th><th>Trạng thái</th></tr></thead><tbody id="dsCT"></tbody></table></div></div>`;
+    <div class="cuon"><table class="bang co-the"><thead><tr><th>Ngày nhận</th><th>Công trình</th><th>Chủ trì</th>${ME.quyen.hopdong ? '<th>Mối</th>' : ''}${ME.quyen.hopdong ? '<th class="r">Giá trị nhận</th>' : ''}<th>Nhóm Zalo</th><th>Trạng thái</th></tr></thead><tbody id="dsCT"></tbody></table></div></div>`;
   if ($('#ctNgay')) $('#ctNgay').valueAsDate = new Date();
   const ve = () => {
     const q = P_khong($('#timCT').value), l = $('#locCT').value;
     $('#dsCT').innerHTML = ds.filter(x => (!q || P_khong([x.ten, x.moi, x.chu_tri, ngay(x.ngay_nhan)].join(' ')).includes(q)) && (!l || (l === 'toi' ? x.cua_toi : l === 'app' ? x.nguon === 'App' : x.trang_thai === l)))
-      .map(x => `<tr style="cursor:pointer" onclick="location.hash='#/ct?ma=${x.ma}'"><td data-n="Ngày nhận" style="white-space:nowrap">${ngay(x.ngay_nhan) || '—'}</td><td data-n="Công trình"><b>${esc(x.ten)}</b>${x.thu_muc_id ? '' : ' <span class="tag t-xam">chưa có thư mục</span>'}${x.nguon === 'App' ? ' <span class="tag t-dang">chỉ có trên app</span>' : ''}</td><td data-n="Chủ trì">${esc(x.chu_tri || '')}</td><td data-n="Mối">${esc(x.moi || '')}</td>${ME.quyen.hopdong ? `<td class="r" data-n="Giá trị nhận">${x.tien && x.tien.gt_nhan ? vnd(x.tien.gt_nhan) : ''}</td>` : ''}<td data-n="Nhóm Zalo">${x.zalo ? `<a class="tag t-xong" href="${esc(x.zalo)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Mở nhóm</a>` : ''}</td><td data-n="Trạng thái">${tag(x.trang_thai)}</td></tr>`).join('') || '<tr><td colspan="7" class="rong">Không có công trình phù hợp</td></tr>';
+      .map(x => `<tr style="cursor:pointer" onclick="location.hash='#/ct?ma=${x.ma}'"><td data-n="Ngày nhận" style="white-space:nowrap">${ngay(x.ngay_nhan) || '—'}</td><td data-n="Công trình"><b>${esc(x.ten)}</b>${x.thu_muc_id ? '' : ' <span class="tag t-xam">chưa có thư mục</span>'}${x.nguon === 'App' ? ' <span class="tag t-dang">chỉ có trên app</span>' : ''}</td><td data-n="Chủ trì">${esc(x.chu_tri || '')}</td>${ME.quyen.hopdong ? `<td data-n="Mối">${esc(x.moi || '')}</td>` : ''}${ME.quyen.hopdong ? `<td class="r" data-n="Giá trị nhận">${x.tien && x.tien.gt_nhan ? vnd(x.tien.gt_nhan) : ''}</td>` : ''}<td data-n="Nhóm Zalo">${x.zalo ? `<a class="tag t-xong" href="${esc(x.zalo)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Mở nhóm</a>` : ''}</td><td data-n="Trạng thái">${tag(x.trang_thai)}</td></tr>`).join('') || '<tr><td colspan="7" class="rong">Không có công trình phù hợp</td></tr>';
   };
   $('#timCT').oninput = ve; $('#locCT').onchange = ve; ve();
 };
@@ -412,7 +412,7 @@ TRANG['#/ct'] = async (nd, q) => {
   const dang = x.phan_cong.filter(p => !p.den);
   CACHE.ctDang = x;
   let h = `<p style="margin:0 0 8px"><a href="#/cong-trinh" class="nho">← Danh sách công trình</a></p>` +
-    tieuDe(esc(x.ten), `Nhận ${ngay(x.ngay_nhan) || '—'} · Chủ trì ${esc(x.chu_tri || '—')} · Mối ${esc(x.moi || '—')}${x.nguon === 'App' ? ' · <span class="tag t-dang">chỉ có trên app</span>' : ''}`,
+    tieuDe(esc(x.ten), `Nhận ${ngay(x.ngay_nhan) || '—'} · Chủ trì ${esc(x.chu_tri || '—')}${ME.quyen.hopdong ? ' · Mối ' + esc(x.moi || '—') : ''}${x.nguon === 'App' ? ' · <span class="tag t-dang">chỉ có trên app</span>' : ''}`,
       `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${tag(x.trang_thai)}${x.zalo ? `<a class="nut phu" href="${esc(x.zalo)}" target="_blank" rel="noopener" style="text-decoration:none">Nhóm Zalo</a>` : ''}${x.thu_muc_id ? `<a class="nut vang" href="https://drive.google.com/drive/folders/${x.thu_muc_id}" target="_blank" style="text-decoration:none">${ic('mo', 'width:16px;height:16px')}Thư mục hồ sơ</a>` : '<span class="tag t-xam">Chưa có thư mục Drive</span>'}</div>`);
   if (x.tien) {
     const t = x.tien;
@@ -989,7 +989,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.5.4 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.5.5 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
