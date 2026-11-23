@@ -766,7 +766,8 @@ function moAI() {
 let MO_NGOAI = '';
 function moNgoai(u) { MO_NGOAI = u; if (/^https?:/i.test(u)) window.open(u, '_blank', 'noopener'); else location.href = u; }
 const laDT = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-function hienNutAI() { const e = $('#nutAI'); if (e) e.classList.toggle('an', !(ME && (ME.ai !== false || ME.vai === 'admin'))); }
+let AI_HIEN = false;      // anh Khuê chốt 23/11/2026 18:17: tắt nút AI với MỌI người, kể cả quản trị. Muốn bật lại thì đổi thành true.
+function hienNutAI() { const e = $('#nutAI'); if (e) e.classList.toggle('an', !AI_HIEN || !(ME && (ME.ai !== false || ME.vai === 'admin'))); }
 /* Link nhóm Zalo: mở thẳng ứng dụng Zalo bằng zalo://zalo.me/g/…, đúng đường trang zalo.me tự dùng khi bấm "Tham gia nhóm". Link dạng khác thì mở trang web như cũ. */
 function moZalo(ev, link) {
   if (ev) { ev.preventDefault(); ev.stopPropagation(); }
@@ -1323,7 +1324,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.6.1 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.6.2 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
