@@ -749,8 +749,14 @@ function veAI() {
   const k = $('#hopND'); k.scrollTop = k.scrollHeight; $('#hop').scrollTop = $('#hop').scrollHeight;
 }
 function moAI() {
-  moHop(dauHop('Hỏi trợ lý AI') + `<p class="nho" style="margin:-4px 0 8px">AI trả lời theo số liệu anh/chị được xem trong app. AI có thể sai: việc quan trọng thì mở mục gốc kiểm lại.${ME.ai === false ? (ME.vai === 'admin' ? ' <b style="color:#b42318">Chưa cài khóa AI nên chưa hỏi được</b> (Apps Script → Cài đặt dự án → Thuộc tính tập lệnh → AI_KEY).' : ' <b style="color:#b42318">Trợ lý AI chưa được bật, báo anh Khuê.</b>') : ''}</p>
-    <div id="aiND"></div>
+  const ad = ME.vai === 'admin', co = ME.ai !== false, hang = ME.ai_hang === 'claude' ? 'Claude' : ME.ai_hang === 'gemini' ? 'Gemini' : 'AI';
+  // chỉ quản trị thấy: dán khóa ngay trong app, khóa lưu ở máy xử lý và không bao giờ hiện lại
+  const khoa = ad ? `<details id="aiKhoa" ${co ? '' : 'open'} style="margin:0 0 10px"><summary class="nho" style="cursor:pointer">${co ? 'Khóa AI: đang dùng ' + hang + '. Bấm để đổi hoặc tắt' : 'Cài khóa AI (chỉ anh thấy mục này)'}</summary>
+      <p class="nho" style="margin:6px 0">Dán khóa Claude (bắt đầu bằng sk-ant-), tạo trong Claude Console, mục API keys. Khóa lưu ở máy xử lý, app không hiện lại.</p>
+      <div class="hang" style="align-items:flex-end"><input id="aiKhoaO" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…" style="flex:3"><button class="nut" id="aiKhoaL" style="flex:none" onclick="luuKhoaAI()">Lưu khóa</button></div>
+      ${co ? '<p style="margin:6px 0 0"><a class="nho" href="javascript:void 0" onclick="luuKhoaAI(true)">Tắt trợ lý AI (xóa khóa)</a></p>' : ''}</details>` : '';
+  moHop(dauHop('Hỏi trợ lý AI') + `<p class="nho" style="margin:-4px 0 8px">AI trả lời theo số liệu anh/chị được xem trong app. AI có thể sai: việc quan trọng thì mở mục gốc kiểm lại. Câu hỏi và câu trả lời được lưu lại để chỉnh app cho sát việc.${co ? '' : (ad ? ' <b style="color:#b42318">Chưa cài khóa AI nên chưa hỏi được.</b>' : ' <b style="color:#b42318">Trợ lý AI chưa được bật, báo anh Khuê.</b>')}</p>
+    ${khoa}<div id="aiND"></div>
     <div class="hang" style="align-items:flex-end"><textarea id="aiHoi" rows="2" style="flex:3" placeholder="Gõ câu hỏi…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();guiAI()}"></textarea><button class="nut" id="aiGui" style="flex:none" onclick="guiAI()">Hỏi</button></div>
     ${AI_LS.length ? '<p style="margin:8px 0 0"><a class="nho" href="javascript:void 0" onclick="AI_LS=[];veAI()">Xóa cuộc trò chuyện này</a></p>' : ''}`);
   veAI(); $('#aiHoi').focus();
@@ -761,10 +767,25 @@ async function guiAI() {
   const lichSu = AI_LS.filter(m => m.vai === 'toi' || m.vai === 'ai').slice(-6).map(m => ({ vai: m.vai, noi_dung: m.noi_dung }));
   AI_LS.push({ vai: 'toi', noi_dung: t }, { vai: 'cho', noi_dung: 'Đang trả lời…' }); veAI();
   let kq;
-  try { const r = await goi('hoiAI', { cau_hoi: t, lich_su: lichSu }); kq = { vai: 'ai', noi_dung: r.tra_loi }; }
+  try { const r = await goi('hoiAI', { cau_hoi: t, lich_su: lichSu }); kq = { vai: 'ai', noi_dung: r.tra_loi }; ME.ai = true; }
   catch (e) { kq = { vai: 'loi', noi_dung: e.message }; }
   AI_LS = AI_LS.filter(m => m.vai !== 'cho'); AI_LS.push(kq); veAI();
   const o2 = $('#aiHoi'); if (o2) o2.focus();
+}
+async function luuKhoaAI(xoa) {
+  const o = $('#aiKhoaO'), k = o ? o.value.trim() : '';
+  if (!xoa && !k) { bao('Chưa dán khóa'); return; }
+  if (xoa && !confirm('Tắt trợ lý AI và xóa khóa đang lưu ở máy xử lý?')) return;
+  const n = $('#aiKhoaL'); if (n) n.disabled = true;
+  bao(xoa ? 'Đang tắt…' : 'Đang lưu khóa…', 30000);
+  try {
+    const r = await goi('datKhoaAI', xoa ? { xoa: true } : { khoa: k });
+    if (o) o.value = '';
+    ME.ai = r.ai; ME.ai_hang = r.hang;
+    try { localStorage.removeItem(khoaLuu('me')); } catch (e) {}
+    bao(xoa ? 'Đã tắt trợ lý AI, khóa đã xóa.' : 'Đã lưu khóa ' + (r.hang === 'claude' ? 'Claude' : 'Gemini') + '. Hỏi thử một câu để kiểm.', 6000);
+    moAI();
+  } catch (e) { bao(e.message, 7000); if (n) n.disabled = false; }
 }
 
 /* =================== ĐỢT 3: CÔNG VIỆC THEO CÔNG TRÌNH =================== */
@@ -1269,7 +1290,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.5.9 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.6.0 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
