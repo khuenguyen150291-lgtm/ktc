@@ -233,11 +233,11 @@ function hienNguoi() {
 async function vaoApp(cred) {
   TOKEN = cred; EMAIL = emailTuToken(cred);
   if (EMAIL) { xoaLuuMay('ktc:' + EMAIL + ':'); try { localStorage.setItem('ktc:luc', String(Date.now())); } catch (e) {} }
-  const batDau = () => { hienNguoi(); ['#ben', '#dau', '#duoi', '#nutAI'].forEach(s => $(s).classList.remove('an')); dungMenu(); window.onhashchange = () => dinhTuyen(false); dinhTuyen(false); setTimeout(() => { if (ME.quyen.viec) ['congTrinh', 'viec'].forEach(a => goi(a, {}, true).catch(() => {})); }, 1500); };
+  const batDau = () => { hienNguoi(); ['#ben', '#dau', '#duoi'].forEach(s => $(s).classList.remove('an')); hienNutAI(); dungMenu(); window.onhashchange = () => dinhTuyen(false); dinhTuyen(false); setTimeout(() => { if (ME.quyen.viec) ['congTrinh', 'viec'].forEach(a => goi(a, {}, true).catch(() => {})); }, 1500); };
   const cu = EMAIL && luuDoc('ktc:' + EMAIL + ':me:{}');
   if (cu) {
     ME = cu; batDau();
-    goi('me', {}, true).then(m => { ME = m; hienNguoi(); dungMenu(); }).catch(e => { if (e.code === 'DENY') { try { localStorage.clear(); } catch (x) {} location.reload(); } });
+    goi('me', {}, true).then(m => { ME = m; hienNguoi(); dungMenu(); hienNutAI(); }).catch(e => { if (e.code === 'DENY') { try { localStorage.clear(); } catch (x) {} location.reload(); } });
     return;
   }
   try { ME = await goi('me', {}, true); batDau(); } catch (e) { $('#loiDN').textContent = e.message; }
@@ -444,7 +444,7 @@ TRANG['#/cong-trinh'] = async nd => {
   const ve = () => {
     const q = P_khong($('#timCT').value), l = $('#locCT').value;
     $('#dsCT').innerHTML = ds.filter(x => (!q || P_khong([x.ten, x.moi, x.chu_tri, ngay(x.ngay_nhan)].join(' ')).includes(q)) && (!l || (l === 'toi' ? x.cua_toi : l === 'app' ? x.nguon === 'App' : x.trang_thai === l)))
-      .map(x => `<tr style="cursor:pointer" onclick="location.hash='#/ct?ma=${x.ma}'"><td data-n="Ngày nhận" style="white-space:nowrap">${ngay(x.ngay_nhan) || '—'}</td><td data-n="Công trình"><b>${esc(x.ten)}</b>${x.thu_muc_id ? '' : ' <span class="tag t-xam">chưa có thư mục</span>'}${x.nguon === 'App' ? ' <span class="tag t-dang">chỉ có trên app</span>' : ''}</td><td data-n="Chủ trì">${esc(x.chu_tri || '')}</td>${ME.quyen.hopdong ? `<td data-n="Mối">${esc(x.moi || '')}</td>` : ''}${ME.quyen.hopdong ? `<td class="r" data-n="Giá trị nhận">${x.tien && x.tien.gt_nhan ? vnd(x.tien.gt_nhan) : ''}</td>` : ''}<td data-n="Nhóm Zalo">${x.zalo ? `<a class="tag t-xong" href="${esc(x.zalo)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Mở nhóm</a>` : ''}</td><td data-n="Trạng thái">${tag(x.trang_thai)}</td></tr>`).join('') || '<tr><td colspan="7" class="rong">Không có công trình phù hợp</td></tr>';
+      .map(x => `<tr style="cursor:pointer" onclick="location.hash='#/ct?ma=${x.ma}'"><td data-n="Ngày nhận" style="white-space:nowrap">${ngay(x.ngay_nhan) || '—'}</td><td data-n="Công trình"><b>${esc(x.ten)}</b>${x.thu_muc_id ? '' : ' <span class="tag t-xam">chưa có thư mục</span>'}${x.nguon === 'App' ? ' <span class="tag t-dang">chỉ có trên app</span>' : ''}</td><td data-n="Chủ trì">${esc(x.chu_tri || '')}</td>${ME.quyen.hopdong ? `<td data-n="Mối">${esc(x.moi || '')}</td>` : ''}${ME.quyen.hopdong ? `<td class="r" data-n="Giá trị nhận">${x.tien && x.tien.gt_nhan ? vnd(x.tien.gt_nhan) : ''}</td>` : ''}<td data-n="Nhóm Zalo">${x.zalo ? `<a class="tag t-xong" href="${esc(x.zalo)}" target="_blank" rel="noopener" onclick="moZalo(event,this.href)">Mở nhóm</a>` : ''}</td><td data-n="Trạng thái">${tag(x.trang_thai)}</td></tr>`).join('') || '<tr><td colspan="7" class="rong">Không có công trình phù hợp</td></tr>';
   };
   $('#timCT').oninput = ve; $('#locCT').onchange = ve; ve();
 };
@@ -455,7 +455,7 @@ TRANG['#/ct'] = async (nd, q) => {
   CACHE.ctDang = x;
   let h = `<p style="margin:0 0 8px"><a href="#/cong-trinh" class="nho">← Danh sách công trình</a></p>` +
     tieuDe(esc(x.ten), `Nhận ${ngay(x.ngay_nhan) || '—'} · Chủ trì ${esc(x.chu_tri || '—')}${ME.quyen.hopdong ? ' · Mối ' + esc(x.moi || '—') : ''}${x.nguon === 'App' ? ' · <span class="tag t-dang">chỉ có trên app</span>' : ''}`,
-      `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${tag(x.trang_thai)}${x.zalo ? `<a class="nut phu" href="${esc(x.zalo)}" target="_blank" rel="noopener" style="text-decoration:none">Nhóm Zalo</a>` : ''}${x.thu_muc_id ? `<a class="nut vang" href="https://drive.google.com/drive/folders/${x.thu_muc_id}" target="_blank" style="text-decoration:none">${ic('mo', 'width:16px;height:16px')}Thư mục hồ sơ</a>` : '<span class="tag t-xam">Chưa có thư mục Drive</span>'}</div>`);
+      `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${tag(x.trang_thai)}${x.zalo ? `<a class="nut phu" href="${esc(x.zalo)}" target="_blank" rel="noopener" style="text-decoration:none" onclick="moZalo(event,this.href)">Nhóm Zalo</a>` : ''}${x.thu_muc_id ? `<a class="nut vang" href="https://drive.google.com/drive/folders/${x.thu_muc_id}" target="_blank" style="text-decoration:none">${ic('mo', 'width:16px;height:16px')}Thư mục hồ sơ</a>` : '<span class="tag t-xam">Chưa có thư mục Drive</span>'}</div>`);
   if (x.tien) {
     const t = x.tien;
     h += '<div class="luoi">' + [['Giá trị nhận', t.gt_nhan, ''], ['Chi A', t.chi_a, 'toi'], ['Thuê người', t.thue_nguoi, 'toi'], ['Còn lại về công ty', t.con_lai, 'xanh']]
@@ -473,7 +473,7 @@ TRANG['#/ct'] = async (nd, q) => {
       <div id="dgForm" class="an" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--vien)"><b id="dgTen"></b><div class="hang"><div><label>Hạn</label><input id="dgHan" type="date"></div><div><label>Ngày xong</label><input id="dgXong" type="date"></div><div><label>Chất lượng</label><select id="dgCL"><option value="">Chưa chấm</option><option value="5">5 – Rất tốt</option><option value="4">4 – Tốt</option><option value="3">3 – Đạt</option><option value="2">2 – Phải sửa nhiều</option><option value="1">1 – Không đạt</option></select></div></div><label>Ghi chú</label><input id="dgGC"><p style="margin:10px 0 0"><button class="nut" id="dgLuu">Lưu đánh giá</button></p></div>` : ''}</div>`;
   if (sua) h += `<div class="the"><h3>Nhóm, cấp công trình</h3><p class="nho" style="margin:-6px 0 8px">Dùng để tính độ khó khi chấm năng lực.</p><div class="hang"><select id="ctNhom"><option value="">Nhóm dự án…</option>${['A', 'B', 'C'].map(v => `<option${x.nhom === v ? ' selected' : ''}>${v}</option>`).join('')}</select><select id="ctCap"><option value="">Cấp công trình…</option>${['Đặc biệt', 'I', 'II', 'III', 'IV'].map(v => `<option${x.cap === v ? ' selected' : ''}>${v}</option>`).join('')}</select><button class="nut" style="flex:none" onclick="luuCap('${x.ma}')">Lưu</button></div></div>`;
   else if (x.nhom || x.cap) h += `<div class="the nho">Nhóm ${esc(x.nhom || '—')} · Cấp ${esc(x.cap || '—')}</div>`;
-  if (sua || x.zalo) h += `<div class="the"><h3>Nhóm Zalo</h3>${x.zalo ? `<p style="margin:0 0 8px"><a href="${esc(x.zalo)}" target="_blank" rel="noopener">${esc(x.zalo)}</a></p>` : '<p class="nho" style="margin:0 0 8px">Chưa gắn nhóm Zalo</p>'}
+  if (sua || x.zalo) h += `<div class="the"><h3>Nhóm Zalo</h3>${x.zalo ? `<p style="margin:0 0 8px"><a class="nut phu" href="${esc(x.zalo)}" target="_blank" rel="noopener" style="text-decoration:none" onclick="moZalo(event,this.href)">Mở nhóm trong Zalo</a> <a class="nho" href="${esc(x.zalo)}" target="_blank" rel="noopener" style="margin-left:8px">mở trang web</a></p><p class="nho" style="margin:0 0 8px;word-break:break-all">${esc(x.zalo)}</p>` : '<p class="nho" style="margin:0 0 8px">Chưa gắn nhóm Zalo</p>'}
     ${sua ? `<div class="hang"><input id="zlLink" placeholder="https://zalo.me/g/…" value="${esc(x.zalo || '')}" style="flex:3"><button class="nut" style="flex:none" onclick="luuZalo('${x.ma}')">Lưu</button></div>` : ''}</div>`;
   if (x.ai_thay) h += `<div class="the"><h3>Ai đang thấy công trình này</h3>
     <div class="nho">Thông tin chung</div>${aiThayHtml(x.ai_thay.thong_tin) || '<div class="nho">—</div>'}
@@ -751,17 +751,50 @@ function veAI() {
 function moAI() {
   const ad = ME.vai === 'admin', co = ME.ai !== false, hang = ME.ai_hang === 'claude' ? 'Claude' : ME.ai_hang === 'gemini' ? 'Gemini' : 'AI';
   // chỉ quản trị thấy: dán khóa ngay trong app, khóa lưu ở máy xử lý và không bao giờ hiện lại
-  const khoa = ad ? `<details id="aiKhoa" ${co ? '' : 'open'} style="margin:0 0 10px"><summary class="nho" style="cursor:pointer">${co ? 'Khóa AI: đang dùng ' + hang + '. Bấm để đổi hoặc tắt' : 'Cài khóa AI (chỉ anh thấy mục này)'}</summary>
+  const khoa = ad ? `<details id="aiKhoa" style="margin:0 0 10px"><summary class="nho" style="cursor:pointer">${co ? 'Khóa AI: đang dùng ' + hang + '. Bấm để đổi hoặc tắt' : 'Cách khác: cài khóa API để anh em hỏi ngay trong app (tính tiền riêng với gói Claude)'}</summary>
       <p class="nho" style="margin:6px 0">Dán khóa Claude (bắt đầu bằng sk-ant-), tạo trong Claude Console, mục API keys. Khóa lưu ở máy xử lý, app không hiện lại.</p>
       <div class="hang" style="align-items:flex-end"><input id="aiKhoaO" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…" style="flex:3"><button class="nut" id="aiKhoaL" style="flex:none" onclick="luuKhoaAI()">Lưu khóa</button></div>
       ${co ? '<p style="margin:6px 0 0"><a class="nho" href="javascript:void 0" onclick="luuKhoaAI(true)">Tắt trợ lý AI (xóa khóa)</a></p>' : ''}</details>` : '';
-  moHop(dauHop('Hỏi trợ lý AI') + `<p class="nho" style="margin:-4px 0 8px">AI trả lời theo số liệu anh/chị được xem trong app. AI có thể sai: việc quan trọng thì mở mục gốc kiểm lại. Câu hỏi và câu trả lời được lưu lại để chỉnh app cho sát việc.${co ? '' : (ad ? ' <b style="color:#b42318">Chưa cài khóa AI nên chưa hỏi được.</b>' : ' <b style="color:#b42318">Trợ lý AI chưa được bật, báo anh Khuê.</b>')}</p>
+  moHop(dauHop('Hỏi trợ lý AI') + `<p class="nho" style="margin:-4px 0 8px">${co ? 'AI trả lời theo số liệu anh/chị được xem trong app. AI có thể sai: việc quan trọng thì mở mục gốc kiểm lại. Câu hỏi và câu trả lời được lưu lại để chỉnh app cho sát việc.' : (ad ? 'Trợ lý trong app đang <b>tắt</b> (chưa cài khóa, không tốn tín dụng). Anh gõ câu hỏi rồi bấm <b>Mở Claude</b>: câu hỏi được điền sẵn trong ứng dụng Claude của anh và tính vào gói Claude anh đang dùng.' : '<b style="color:#b42318">Trợ lý AI chưa được bật, báo anh Khuê.</b>')}</p>
     ${khoa}<div id="aiND"></div>
-    <div class="hang" style="align-items:flex-end"><textarea id="aiHoi" rows="2" style="flex:3" placeholder="Gõ câu hỏi…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();guiAI()}"></textarea><button class="nut" id="aiGui" style="flex:none" onclick="guiAI()">Hỏi</button></div>
+    <div class="hang" style="align-items:flex-end"><textarea id="aiHoi" rows="2" style="flex:3" placeholder="Gõ câu hỏi…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();guiAI()}"></textarea><button class="nut" id="aiGui" style="flex:none" onclick="guiAI()">${co ? 'Hỏi' : 'Mở Claude'}</button></div>
+    ${!co && ad ? '<p style="margin:8px 0 0"><a id="aiWeb" class="nho" href="https://claude.ai/new" target="_blank" rel="noopener">Không thấy Claude mở ra? Bấm đây để mở bằng trình duyệt</a></p>' : ''}
     ${AI_LS.length ? '<p style="margin:8px 0 0"><a class="nho" href="javascript:void 0" onclick="AI_LS=[];veAI()">Xóa cuộc trò chuyện này</a></p>' : ''}`);
   veAI(); $('#aiHoi').focus();
 }
+/* Mở đường dẫn ra ngoài app: đường https mở thẻ mới, đường của ứng dụng (zalo://, claude://) giao cho máy mở ứng dụng */
+let MO_NGOAI = '';
+function moNgoai(u) { MO_NGOAI = u; if (/^https?:/i.test(u)) window.open(u, '_blank', 'noopener'); else location.href = u; }
+const laDT = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+function hienNutAI() { const e = $('#nutAI'); if (e) e.classList.toggle('an', !(ME && (ME.ai !== false || ME.vai === 'admin'))); }
+/* Link nhóm Zalo: mở thẳng ứng dụng Zalo bằng zalo://zalo.me/g/…, đúng đường trang zalo.me tự dùng khi bấm "Tham gia nhóm". Link dạng khác thì mở trang web như cũ. */
+function moZalo(ev, link) {
+  if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+  const m = /^https?:\/\/(zalo\.me\/g\/[A-Za-z0-9_-]+)\/?$/i.exec(String(link || '').trim());
+  if (!m) { moNgoai(link); return; }
+  let roi = false; const an = () => { if (document.hidden) roi = true; }, mo = () => { roi = true; };
+  document.addEventListener('visibilitychange', an); window.addEventListener('blur', mo);
+  moNgoai('zalo://' + m[1]);
+  setTimeout(() => {
+    document.removeEventListener('visibilitychange', an); window.removeEventListener('blur', mo);
+    if (roi) return;
+    if (laDT()) window.open(link, '_blank', 'noopener');                    // điện thoại không có đường zalo:// thì mở trang web của nhóm
+    else bao('Nếu Zalo không tự mở: bấm "mở trang web" ở khung Nhóm Zalo trong trang công trình.', 6000);
+  }, 2500);
+}
+/* Chưa cài khóa: quản trị hỏi trong ứng dụng Claude của chính mình (tính vào gói Claude, không dùng khóa API, không qua máy xử lý) */
+function hoiClaude() {
+  const o = $('#aiHoi'), t = o ? o.value.trim() : ''; if (!t) { bao('Gõ câu hỏi trước đã'); return; }
+  const ct = /^#\/ct\?/.test(location.hash) && CACHE.ctDang ? `\nĐang xem công trình: ${CACHE.ctDang.ma} ${CACHE.ctDang.ten}.` : '';
+  const loi = `Câu hỏi từ app quản lý KTC. Dùng số liệu của app: Google Sheet "KTC_APP_DuLieu" trên Drive (bảng CongTrinh, Viec, MocCT, PhanCong, TienDo) và tài liệu dự án "Quản Lý Kiến Thành Công". Trả lời ngắn gọn, ghi rõ lấy từ bảng nào.${ct}\n\nCâu hỏi: ${t}`.slice(0, 6000);
+  try { navigator.clipboard.writeText(loi).catch(() => {}); } catch (e) {}
+  const q = encodeURIComponent(loi), w = $('#aiWeb'); if (w) w.href = 'https://claude.ai/new?q=' + q;
+  o.value = '';
+  AI_LS.push({ vai: 'toi', noi_dung: t }, { vai: 'ai', noi_dung: 'Đã chuyển câu hỏi sang ứng dụng Claude. Bên đó bấm gửi là xong. Nếu ô soạn tin trống thì dán vào (câu hỏi đã được sao chép).' }); veAI();
+  moNgoai((laDT() ? 'https://claude.ai/new?q=' : 'claude://claude.ai/new?q=') + q);
+}
 async function guiAI() {
+  if (ME.ai === false && ME.vai === 'admin') return hoiClaude();
   const o = $('#aiHoi'), t = o ? o.value.trim() : ''; if (!t || AI_LS.some(m => m.vai === 'cho')) return;
   o.value = '';
   const lichSu = AI_LS.filter(m => m.vai === 'toi' || m.vai === 'ai').slice(-6).map(m => ({ vai: m.vai, noi_dung: m.noi_dung }));
@@ -781,7 +814,7 @@ async function luuKhoaAI(xoa) {
   try {
     const r = await goi('datKhoaAI', xoa ? { xoa: true } : { khoa: k });
     if (o) o.value = '';
-    ME.ai = r.ai; ME.ai_hang = r.hang;
+    ME.ai = r.ai; ME.ai_hang = r.hang; hienNutAI();
     try { localStorage.removeItem(khoaLuu('me')); } catch (e) {}
     bao(xoa ? 'Đã tắt trợ lý AI, khóa đã xóa.' : 'Đã lưu khóa ' + (r.hang === 'claude' ? 'Claude' : 'Gemini') + '. Hỏi thử một câu để kiểm.', 6000);
     moAI();
@@ -1290,7 +1323,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.6.0 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.6.1 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
