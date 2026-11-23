@@ -255,9 +255,14 @@ async function xaHang() {
   DO.push([ds.map(x => x.action).join('+').slice(0, 60), Math.round(performance.now() - t0)]);
   const loi = (x, o) => { if (o.code === 'AUTH') { bao('Phiên hết hạn, đang đăng nhập lại…'); try { google.accounts.id.prompt(); } catch (e) {} } x.rej(Object.assign(new Error(o.error), { code: o.code })); };
   if (!j.ok) return ds.forEach(x => loi(x, j));
-  (ds.length === 1 ? [j] : j.data).forEach((o, i) => { const x = ds[i]; if (!o.ok) return loi(x, o); if (DOC.has(x.action) && EMAIL) luuGhi(x.k, o.data); x.res(o.data); });
+  let hong = false;                                            // thao tác lưu trong lượt này bị lỗi → không vẽ lại trang, giữ nguyên chữ đang nhập
+  (ds.length === 1 ? [j] : j.data).forEach((o, i) => { const x = ds[i], doc = DOC.has(x.action);
+    if (!o.ok) { if (!doc) hong = true; return loi(x, o); }
+    if (doc && EMAIL) luuGhi(x.k, o.data);
+    if (doc && hong) return x.rej(Object.assign(new Error('Chưa lưu được nên giữ nguyên màn hình'), { code: 'HUY' }));
+    x.res(o.data); });
 }
-window.addEventListener('unhandledrejection', e => { const m = e.reason && e.reason.message; if (m) bao(m, 6000); });
+window.addEventListener('unhandledrejection', e => { const m = e.reason && e.reason.message; if (e.reason && e.reason.code === 'HUY') return e.preventDefault(); if (m) bao(m, 6000); });
 
 /* ---------- menu theo quyền ---------- */
 const MUC = [
@@ -316,7 +321,7 @@ async function dinhTuyen(moi) {
         window.scrollTo(0, y);
       }
     }
-  } catch (e) { if (luot === LUOT) nd.innerHTML = `<div class="canh">${ic('canh')}<span>${esc(e.message)}</span></div>`; }
+  } catch (e) { if (e && e.code === 'HUY') return; if (luot === LUOT) nd.innerHTML = `<div class="canh">${ic('canh')}<span>${esc(e.message)}</span></div>`; }
 }
 /* tải bản mới vào bộ nhớ (không vẽ); lần vẽ lại đọc từ bộ nhớ vừa cập nhật */
 async function chayMoi(duong, tham) {
@@ -445,16 +450,16 @@ TRANG['#/ct'] = async (nd, q) => {
   if (x.thu_muc_id) goi('fileCT', { ma }).then(fs => { const e = $('#fileCT'); if (e) e.innerHTML = fs.map(f => `<div class="dong" data-l="${esc(/^https:\/\//.test(f.link || '') ? f.link : '')}" onclick="if(this.dataset.l)window.open(this.dataset.l,'_blank','noopener')"><div class="chinh"><b>${f.thu_muc ? '📁 ' : ''}${esc(f.ten)}</b><div class="nho">${esc(f.nguoi)} · ${f.luc ? new Date(f.luc).toLocaleString('vi-VN') : ''}</div></div>${ic('mo', 'width:16px;height:16px;color:var(--phu)')}</div>`).join('') || '<div class="rong nho">Không có file</div>'; }).catch(e => { const el = $('#fileCT'); if (el) el.innerHTML = `<div class="rong nho">${esc(e.message)}</div>`; });
   if (adm) { const db = CACHE.db || (CACHE.db = await goi('danhBa')); if ($('#pcNguoi')) $('#pcNguoi').innerHTML = db.filter(n => n.trang_thai !== 'Nghỉ').map(n => `<option value="${esc(n.ma)}">${esc(n.ten)}${n.vai_tro ? ' – ' + esc(n.vai_tro) : ''}</option>`).join(''); }
 };
-async function themTD(ma) { const nd = $('#tdND').value.trim(); if (!nd) return bao('Nhập nội dung'); await goi('themTienDo', { ma, noi_dung: nd, pt: $('#tdPT').value }); bao('Đã lưu tiến độ'); dinhTuyen(true); }
-async function themPC(ma) { const r = await goi('phanCong', { ma, ma_nguoi: $('#pcNguoi').value, vai: $('#pcVai').value, han: $('#pcHan').value }); bao(r.chia_se ? 'Đã phân công và chia sẻ thư mục' : 'Đã phân công (chưa có thư mục nên chưa chia sẻ)', 4000); dinhTuyen(true); }
-async function goPC(ma, mn, vai) { if (!confirm('Gỡ vai “' + vai + '”? Nếu người này không còn vai nào ở công trình, app gỡ luôn quyền thư mục do app cấp.')) return; await goi('goPhanCong', { ma, ma_nguoi: mn, vai }); bao('Đã gỡ'); dinhTuyen(true); }
+async function themTD(ma) { const nd = $('#tdND').value.trim(); if (!nd) return bao('Nhập nội dung'); await ghi('themTienDo', { ma, noi_dung: nd, pt: $('#tdPT').value }, 'Đã lưu tiến độ'); }
+async function themPC(ma) { const r = await ghi('phanCong', { ma, ma_nguoi: $('#pcNguoi').value, vai: $('#pcVai').value, han: $('#pcHan').value }, null); bao(r.chia_se ? 'Đã phân công và chia sẻ thư mục' : 'Đã phân công (chưa có thư mục nên chưa chia sẻ)', 4000); }
+async function goPC(ma, mn, vai) { if (!confirm('Gỡ vai “' + vai + '”? Nếu người này không còn vai nào ở công trình, app gỡ luôn quyền thư mục do app cấp.')) return; await ghi('goPhanCong', { ma, ma_nguoi: mn, vai }, 'Đã gỡ'); }
 function moDG(ma, mn, vai, han, xong, cl) {
   const f = $('#dgForm'); f.classList.remove('an'); $('#dgTen').textContent = 'Đánh giá: ' + vai; $('#dgHan').value = han; $('#dgXong').value = xong; $('#dgCL').value = cl; $('#dgGC').value = '';
-  $('#dgLuu').onclick = async () => { await goi('danhGiaPC', { ma, ma_nguoi: mn, vai, han: $('#dgHan').value, xong: $('#dgXong').value, cl: $('#dgCL').value, ghi_chu: $('#dgGC').value }); bao('Đã lưu đánh giá'); dinhTuyen(true); };
+  $('#dgLuu').onclick = async () => { await ghi('danhGiaPC', { ma, ma_nguoi: mn, vai, han: $('#dgHan').value, xong: $('#dgXong').value, cl: $('#dgCL').value, ghi_chu: $('#dgGC').value }, 'Đã lưu đánh giá'); };
   f.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
-async function luuCap(ma) { await goi('luuCapCT', { ma, nhom: $('#ctNhom').value, cap: $('#ctCap').value }); bao('Đã lưu nhóm, cấp'); dinhTuyen(true); }
-async function luuZalo(ma) { await goi('luuZaloCT', { ma, zalo: $('#zlLink').value.trim() }); bao('Đã lưu link nhóm Zalo'); dinhTuyen(true); }
+async function luuCap(ma) { await ghi('luuCapCT', { ma, nhom: $('#ctNhom').value, cap: $('#ctCap').value }, 'Đã lưu nhóm, cấp'); }
+async function luuZalo(ma) { await ghi('luuZaloCT', { ma, zalo: $('#zlLink').value.trim() }, 'Đã lưu link nhóm Zalo'); }
 
 /* ---------- Thu chi ---------- */
 TRANG['#/thu-chi'] = async nd => {
@@ -484,8 +489,8 @@ TRANG['#/thu-chi'] = async nd => {
   $('#tcThang').onchange = ve; ve();
 };
 async function luuTC() {
-  const r = await goi('themThuChi', { loai: $('#tcLoai').value, ngay: $('#tcNgay').value, tien: $('#tcTien').value, ma_ct: $('#tcCT').value, noi_dung: $('#tcND').value, doi_tuong: $('#tcDT').value, tk_tm: $('#tcTK').value });
-  bao(r.trung ? 'Đã lưu – NGHI TRÙNG với ' + r.trung : 'Đã lưu', 5000); dinhTuyen(true);
+  const r = await ghi('themThuChi', { loai: $('#tcLoai').value, ngay: $('#tcNgay').value, tien: $('#tcTien').value, ma_ct: $('#tcCT').value, noi_dung: $('#tcND').value, doi_tuong: $('#tcDT').value, tk_tm: $('#tcTK').value }, null);
+  bao(r.trung ? 'Đã lưu – NGHI TRÙNG với ' + r.trung : 'Đã lưu', 5000);
 }
 
 /* ---------- Công nợ ---------- */
@@ -532,7 +537,7 @@ async function luuVP() {
   const p = { ngay: $('#vpNgay').value, tien: $('#vpTien').value, noi_dung: $('#vpND').value };
   if ($('#vpLoai')) p.loai = $('#vpLoai').value;
   if ($('#vpNguoi')) p.nguoi_chi = $('#vpNguoi').value;
-  const r = await goi('themVanPhong', p); bao(r.trung ? 'Đã lưu – nghi trùng ' + r.trung : 'Đã lưu', 4000); dinhTuyen(true);
+  const r = await ghi('themVanPhong', p, null); bao(r.trung ? 'Đã lưu – nghi trùng ' + r.trung : 'Đã lưu', 4000);
 }
 
 /* ---------- Chờ duyệt ---------- */
@@ -542,7 +547,7 @@ TRANG['#/cho-duyet'] = async nd => {
     <p style="border-left:3px solid var(--vang);padding-left:10px;color:var(--phu)">${esc(r['Trích dẫn gốc'])}</p><textarea id="nd_${r['Mã dòng']}" rows="2">${esc(r['Nội dung đề xuất'])}</textarea>
     ${ME.quyen.choduyet > 1 ? `<p class="hang" style="margin:10px 0 0;justify-content:flex-end"><button class="nut phu" style="flex:none" onclick="duyet('${r['Mã dòng']}','bỏ')">Bỏ</button><button class="nut" style="flex:none" onclick="duyet('${r['Mã dòng']}','duyệt')">Duyệt</button></p>` : ''}</div>`).join('') || '<div class="the rong">Không có mục nào chờ duyệt</div>');
 };
-async function duyet(ma, tt) { await goi('duyet', { ma, trang_thai: tt, noi_dung: $('#nd_' + ma).value }); bao(tt === 'duyệt' ? 'Đã duyệt' : 'Đã bỏ'); dinhTuyen(true); }
+async function duyet(ma, tt) { await ghi('duyet', { ma, trang_thai: tt, noi_dung: $('#nd_' + ma).value }, tt === 'duyệt' ? 'Đã duyệt' : 'Đã bỏ'); }
 
 /* ---------- Danh bạ ---------- */
 const diem = v => v == null ? '—' : v + '%';
@@ -564,7 +569,7 @@ TRANG['#/danh-ba'] = async nd => {
   };
   $('#dbTim').oninput = ve; $('#dbLoc').onchange = ve; ve();
 };
-async function luuDB() { await goi('luuDanhBa', { ten: $('#dbTen').value, vai_tro: $('#dbVai').value, sdt: $('#dbSDT').value, gmail: $('#dbMail').value }); bao('Đã thêm'); dinhTuyen(true); }
+async function luuDB() { await ghi('luuDanhBa', { ten: $('#dbTen').value, vai_tro: $('#dbVai').value, sdt: $('#dbSDT').value, gmail: $('#dbMail').value }, 'Đã thêm'); }
 
 /* ---------- Chi tiết một người ---------- */
 TRANG['#/nguoi'] = async (nd, q) => {
@@ -595,7 +600,7 @@ TRANG['#/nguoi'] = async (nd, q) => {
   h += '</div></div>';
   nd.innerHTML = h;
 };
-async function luuNg(ma) { await goi('luuNguoi', { ma, ngay_vao: $('#ngVao').value, trang_thai: $('#ngTT').value }); bao('Đã lưu'); dinhTuyen(true); }
+async function luuNg(ma) { await ghi('luuNguoi', { ma, ngay_vao: $('#ngVao').value, trang_thai: $('#ngTT').value }, 'Đã lưu'); }
 
 /* ---------- Đối tác ---------- */
 const COT_DT = [['Đối tượng', 'Đối tác / người', 'text'], ['Loại', 'Loại (CTV, đối tác, chủ đầu tư…)', 'text'], ['Loại công trình', 'Loại công trình', 'text'], ['Loại việc', 'Loại việc', 'text'],
@@ -624,10 +629,10 @@ function moHS(ma) {
   const r = (CACHE.hs || []).find(x => x['Mã HS'] === ma) || {};
   $('#hsTieuDe').textContent = ma ? 'Sửa thỏa thuận ' + ma : 'Thêm thỏa thuận';
   COT_DT.forEach(c => { const e = $('#hs_' + c[0].replace(/\W/g, '_')); e.value = c[2] === 'date' ? (String(r[c[0]] || '').slice(0, 10)) : (r[c[0]] == null ? '' : r[c[0]]); });
-  $('#hsLuu').onclick = async () => { const p = { 'Mã HS': ma }; COT_DT.forEach(c => p[c[0]] = $('#hs_' + c[0].replace(/\W/g, '_')).value.trim()); if (!ma) p['Trạng thái'] = 'Đã xác nhận ' + new Date().toLocaleDateString('vi-VN'); await goi('luuHeSo', p); bao('Đã lưu'); dinhTuyen(true); };
+  $('#hsLuu').onclick = async () => { const p = { 'Mã HS': ma }; COT_DT.forEach(c => p[c[0]] = $('#hs_' + c[0].replace(/\W/g, '_')).value.trim()); if (!ma) p['Trạng thái'] = 'Đã xác nhận ' + new Date().toLocaleDateString('vi-VN'); await ghi('luuHeSo', p, 'Đã lưu'); };
   $('#hsForm').classList.remove('an'); $('#hsForm').scrollIntoView({ behavior: 'smooth' });
 }
-async function xacNhanHS(ma) { await goi('luuHeSo', { 'Mã HS': ma, 'Trạng thái': 'Đã xác nhận ' + new Date().toLocaleDateString('vi-VN') }); bao('Đã xác nhận'); dinhTuyen(true); }
+async function xacNhanHS(ma) { await ghi('luuHeSo', { 'Mã HS': ma, 'Trạng thái': 'Đã xác nhận ' + new Date().toLocaleDateString('vi-VN') }, 'Đã xác nhận'); }
 
 /* ---------- Bảng lương ---------- */
 const COT_L = [['co_ban', 'Lương CB'], ['phu_cap', 'Phụ cấp'], ['he_so', 'Theo hệ số CT'], ['thuong', 'Thưởng'], ['khau_tru', 'Khấu trừ'], ['bhxh', 'BHXH']];
@@ -649,10 +654,10 @@ TRANG['#/bang-luong'] = async (nd, q) => {
 function moLuong(ma) {
   const x = CACHE.bl.find(r => r.ma_dong === ma); $('#blTen').textContent = x.ten + ' – tháng ' + x.thang;
   COT_L.concat([['da_tra'], ['ngay_tra'], ['ghi_chu']]).forEach(c => $('#bl_' + c[0]).value = x[c[0]] || '');
-  $('#blLuu').onclick = async () => { const p = { ma_dong: ma, thang: x.thang, ma_nguoi: x.ma_nguoi, ten: x.ten }; COT_L.concat([['da_tra'], ['ngay_tra'], ['ghi_chu']]).forEach(c => p[c[0]] = $('#bl_' + c[0]).value); await goi('luuLuong', p); bao('Đã lưu'); dinhTuyen(true); };
+  $('#blLuu').onclick = async () => { const p = { ma_dong: ma, thang: x.thang, ma_nguoi: x.ma_nguoi, ten: x.ten }; COT_L.concat([['da_tra'], ['ngay_tra'], ['ghi_chu']]).forEach(c => p[c[0]] = $('#bl_' + c[0]).value); await ghi('luuLuong', p, 'Đã lưu'); };
   $('#blForm').classList.remove('an'); $('#blForm').scrollIntoView({ behavior: 'smooth' });
 }
-async function taoLuong(thang) { const r = await goi('taoLuongThang', { thang }); bao(r.them ? 'Đã tạo ' + r.them + ' dòng' : 'Tháng này đã đủ dòng cho nhân viên'); dinhTuyen(true); }
+async function taoLuong(thang) { const r = await ghi('taoLuongThang', { thang }, null); bao(r.them ? 'Đã tạo ' + r.them + ' dòng' : 'Tháng này đã đủ dòng cho nhân viên'); }
 
 /* =================== ĐỢT 3: CÔNG VIỆC THEO CÔNG TRÌNH =================== */
 const TT_MAU = { 'Chưa làm': 't-xam', 'Đang làm': 't-dang', 'Chờ kiểm tra': 't-vang', 'Xong': 't-xong', 'Tạm dừng': 't-xam' };
@@ -682,17 +687,32 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#hop').
 const dauHop = t => `<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><h2>${t}</h2><button class="nut phu" style="padding:6px 10px" onclick="dongHop()" aria-label="Đóng">✕</button></div>`;
 async function duLieuViec() { return CACHE.viec || (CACHE.viec = await goi('viec')); }
 /* ghi + tải lại trang (và hộp việc đang mở) trong cùng một lượt gọi máy xử lý */
+const DANG_GHI = new Set();
+function nutBam() { const e = window.event, t = e && e.target && e.target.closest ? e.target.closest('button') : null; return t && document.contains(t) ? t : null; }
 async function ghiRoiTai(action, payload, maViec, loiNhan) {
+  const khoa = action + JSON.stringify(payload || {});
+  if (DANG_GHI.has(khoa)) throw Object.assign(new Error('Đang lưu…'), { code: 'HUY' });   // bấm hai lần liền: chỉ lưu một lần
+  DANG_GHI.add(khoa);
+  const nut = nutBam();
+  if (nut) { nut.disabled = true; nut.style.opacity = .55; }
+  bao('Đang lưu…', 30000);
   const pGhi = goi(action, payload), pCT = maViec ? goi('viecChiTiet', { ma: maViec }, true) : null;
   if (pCT) pCT.catch(() => {});
   CACHE.viec = null;
   const pTrang = dinhTuyen(true);
   let kq, loi = null;
-  try { kq = await pGhi; if (loiNhan) bao(loiNhan); } catch (e) { loi = e; bao(e.message, 6000); }
+  try { kq = await pGhi; if (loiNhan !== null) bao(loiNhan || 'Đã lưu', loiNhan ? 3000 : 1500); } catch (e) { loi = e; bao(e.message, 6000); }
+  DANG_GHI.delete(khoa);
+  if (nut) { nut.disabled = false; nut.style.opacity = ''; }
   if (pCT) { try { const v = await pCT; if (HOPV && HOPV.ma === maViec) { HOPV = v; veHopViec(); } } catch (e) {} }
   await pTrang;
   if (loi) throw loi;
   return kq;
+}
+/* Lưu rồi vẽ lại trang trong MỘT lượt gọi máy xử lý (trước đây là hai lượt nối nhau). xong = câu báo; null = nơi gọi tự báo. */
+async function ghi(action, payload, xong) {
+  try { return await ghiRoiTai(action, payload, '', xong); }
+  catch (e) { throw Object.assign(e, { code: 'HUY' }); }      // lỗi đã báo ở ghiRoiTai, không báo lần hai
 }
 
 /* ---------- trang Công việc ---------- */
@@ -744,8 +764,9 @@ async function doiTT(ma, tt) {
   const d = CACHE.viec, v = d && d.viec.find(x => x.ma === ma);
   if (!v || v.tt === tt) return;
   const cu = v.tt; v.tt = tt; veViec();                       // đổi ngay trên màn hình, sai thì trả lại
-  try { await goi('doiTrangThaiViec', { ma, tt, ban: v.ban }); bao('Đã chuyển sang “' + tt + '”'); CACHE.viec = null; dinhTuyen(true); }
-  catch (er) { v.tt = cu; veViec(); bao(er.message, 6000); }
+  const pGhi = goi('doiTrangThaiViec', { ma, tt, ban: v.ban }), pTrang = dinhTuyen(true);   // lưu + lấy bản mới trong một lượt gọi
+  try { await pGhi; bao('Đã chuyển sang “' + tt + '”'); await pTrang; }
+  catch (er) { v.tt = cu; if (CACHE.viec === d) veViec(); bao(er.message, 6000); }
 }
 
 /* ---------- hộp chi tiết việc ---------- */
@@ -980,7 +1001,7 @@ TRANG['#/he-thong'] = async nd => {
       <div class="the"><h3>Tự kiểm</h3><div class="dong" style="cursor:default"><span>Khóa chống ghi đè</span><b>${esc(d.tu_kiem.khoa)}</b></div><div class="dong" style="cursor:default"><span>Bộ nhớ đệm</span><b>${esc(d.tu_kiem.dem)}</b></div><div class="dong" style="cursor:default"><span>Phiên bản máy xử lý</span><b>${esc(d.tu_kiem.phien_ban)}</b></div></div></div></div>
     <div class="the"><h3>Ai đã xem mục tài chính (14 ngày gần nhất)</h3><p class="nho" style="margin-top:-6px">Ghi theo giờ. Lượt đăng nhập bị từ chối hôm nay: <b>${esc(d.tu_choi || 0)}</b>.</p><table class="bang"><thead><tr><th>Giờ</th><th>Người</th><th>Mục</th><th class="r">Lượt</th></tr></thead><tbody>${(d.xem || []).map(x => `<tr><td data-n="Giờ">${esc(String(x.gio).slice(8, 10) + '/' + String(x.gio).slice(5, 7) + ' ' + String(x.gio).slice(11, 16))}</td><td data-n="Người">${esc(x.email)}</td><td data-n="Mục">${esc(({ thuChi: 'Thu chi', congNo: 'Công nợ', bangLuong: 'Bảng lương', heSo: 'Hệ số', vanPhong: 'Văn phòng' })[x.muc] || x.muc)}</td><td class="r" data-n="Lượt">${esc(x.n)}</td></tr>`).join('') || '<tr><td colspan="4" class="rong">Chưa có lượt xem nào được ghi</td></tr>'}</tbody></table></div>
     <div class="the nho"><b>Ngưỡng kiến nghị</b> (ghi trong tài liệu Lộ trình, Đợt 9). Nên nâng lên database khi có một trong các dấu hiệu: từ 3 ngày trong 7 ngày người dùng chờ trung bình trên 3 giây; từ 15 người dùng trong cùng 1 giờ; từ 3 lỗi hạn mức của Google; từ 10 lần phải chờ vì nhiều người lưu cùng lúc. Chạm một nửa các ngưỡng này thì app báo “Theo dõi sát”.</div>`;
-  $('#htLamMoi').onclick = async () => { await goi('lamMoi'); bao('Đã làm mới. Số liệu các trang sẽ đọc lại từ bảng.'); dinhTuyen(true); };
+  $('#htLamMoi').onclick = async () => { await ghi('lamMoi', {}, 'Đã làm mới. Số liệu các trang sẽ đọc lại từ bảng.'); };
 };
 
 /* ---------- Cài đặt ---------- */
@@ -989,7 +1010,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.5.5 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.5.7 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
