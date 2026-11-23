@@ -98,6 +98,9 @@ label{display:block;font-size:12.5px;color:var(--phu);font-weight:500;margin:10p
 /* đợt 3: công việc */
 #luu{position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:21;display:none;pointer-events:none;background:#fff;color:var(--phu);border:1px solid var(--vien);border-radius:999px;padding:3px 12px;font-size:12px;white-space:nowrap;box-shadow:0 2px 10px rgba(16,24,40,.12)}
 #luu.xong{color:var(--xanh)}
+#nutAI{position:fixed;right:18px;bottom:22px;z-index:13;width:52px;height:52px;border-radius:50%;border:0;background:var(--toi);color:var(--vang);font-weight:700;font-size:15px;box-shadow:0 6px 18px rgba(16,24,40,.28);cursor:pointer}
+@media (max-width:900px){#nutAI{right:12px;bottom:calc(74px + env(safe-area-inset-bottom));width:46px;height:46px}}
+.ai-toi{margin:8px 0 2px;font-weight:600}.ai-ai{white-space:pre-wrap;background:#f6f7f9;border-radius:10px;padding:10px 12px;margin:4px 0 10px}.ai-loi{color:#b42318;margin:4px 0 10px}.ai-cho{color:var(--phu);margin:4px 0 10px}
 #tien{position:fixed;top:0;left:0;right:0;height:3px;z-index:30;pointer-events:none;opacity:0;transition:opacity .2s;background:linear-gradient(90deg,transparent,var(--vang),transparent) no-repeat;background-size:40% 100%;animation:chay 1.1s linear infinite}
 @keyframes chay{from{background-position:-40% 0}to{background-position:140% 0}}
 @media (prefers-reduced-motion:reduce){#tien{animation:none;background:var(--vang)}}
@@ -152,6 +155,7 @@ a.canh{text-decoration:none}
 <div id="tien"></div>
 <div id="thongbao"></div>
 <div id="luu" role="status" aria-live="polite"></div>
+<button id="nutAI" class="an" onclick="moAI()" aria-label="Hỏi trợ lý AI" title="Hỏi trợ lý AI">AI</button>
 <script>
 'use strict';
 const API_URL = 'https://script.google.com/macros/s/AKfycbwlkymttq8kohsqy_tMOh1BSHdj6w3h_szFXAKx1d52MsMeB3PG1IFwFgwl1bOVad41MQ/exec';
@@ -204,7 +208,7 @@ function khoiDong() {
   google.accounts.id.prompt();
 }
 /* ---------- tải nhanh: hiện số liệu lần trước ngay, cập nhật ngầm ---------- */
-const DOC = new Set(['me', 'trangChu', 'congTrinh', 'ctChiTiet', 'thuChi', 'congNo', 'vanPhong', 'danhBa', 'heSo', 'choDuyet', 'fileCT', 'nguoiChiTiet', 'bangLuong', 'viec', 'viecChiTiet', 'tienDo', 'hieuSuat', 'mauMoc', 'mauQuyTrinh', 'tinhTrang']);
+const DOC = new Set(['ctDaXoa', 'me', 'trangChu', 'congTrinh', 'ctChiTiet', 'thuChi', 'congNo', 'vanPhong', 'danhBa', 'heSo', 'choDuyet', 'fileCT', 'nguoiChiTiet', 'bangLuong', 'viec', 'viecChiTiet', 'tienDo', 'hieuSuat', 'mauMoc', 'mauQuyTrinh', 'tinhTrang']);
 let NHANH = false, TRUNG = false, EMAIL = '', LUOT = 0;
 const luuDoc = k => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } };
 const luuGhi = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { try { Object.keys(localStorage).filter(x => x.startsWith('ktc:')).forEach(x => localStorage.removeItem(x)); } catch (e2) {} } };
@@ -229,7 +233,7 @@ function hienNguoi() {
 async function vaoApp(cred) {
   TOKEN = cred; EMAIL = emailTuToken(cred);
   if (EMAIL) { xoaLuuMay('ktc:' + EMAIL + ':'); try { localStorage.setItem('ktc:luc', String(Date.now())); } catch (e) {} }
-  const batDau = () => { hienNguoi(); ['#ben', '#dau', '#duoi'].forEach(s => $(s).classList.remove('an')); dungMenu(); window.onhashchange = () => dinhTuyen(false); dinhTuyen(false); setTimeout(() => { if (ME.quyen.viec) ['congTrinh', 'viec'].forEach(a => goi(a, {}, true).catch(() => {})); }, 1500); };
+  const batDau = () => { hienNguoi(); ['#ben', '#dau', '#duoi', '#nutAI'].forEach(s => $(s).classList.remove('an')); dungMenu(); window.onhashchange = () => dinhTuyen(false); dinhTuyen(false); setTimeout(() => { if (ME.quyen.viec) ['congTrinh', 'viec'].forEach(a => goi(a, {}, true).catch(() => {})); }, 1500); };
   const cu = EMAIL && luuDoc('ktc:' + EMAIL + ':me:{}');
   if (cu) {
     ME = cu; batDau();
@@ -435,7 +439,7 @@ TRANG['#/cong-trinh'] = async nd => {
       sua ? `<button class="nut vang" style="flex:none" onclick="$('#ctForm').classList.toggle('an')">+ Thêm công trình</button>` : '') + (sua ? formThemCT() : '') +
     `<div class="the"><div class="hang" style="margin-bottom:10px"><input id="timCT" placeholder="Tìm tên công trình, mối, chủ trì…" style="flex:3">
     <select id="locCT"><option value="">Tất cả trạng thái</option><option>Đang làm</option><option>Đã xong</option><option>Hủy</option><option value="toi">Của tôi</option><option value="app">Chỉ có trên app</option></select></div>
-    <div class="cuon"><table class="bang co-the"><thead><tr><th>Ngày nhận</th><th>Công trình</th><th>Chủ trì</th>${ME.quyen.hopdong ? '<th>Mối</th>' : ''}${ME.quyen.hopdong ? '<th class="r">Giá trị nhận</th>' : ''}<th>Nhóm Zalo</th><th>Trạng thái</th></tr></thead><tbody id="dsCT"></tbody></table></div></div>`;
+    <div class="cuon"><table class="bang co-the"><thead><tr><th>Ngày nhận</th><th>Công trình</th><th>Chủ trì</th>${ME.quyen.hopdong ? '<th>Mối</th>' : ''}${ME.quyen.hopdong ? '<th class="r">Giá trị nhận</th>' : ''}<th>Nhóm Zalo</th><th>Trạng thái</th></tr></thead><tbody id="dsCT"></tbody></table></div></div>` + (ME.vai === 'admin' ? `<details class="the" ontoggle="napCTXoa(this)"><summary style="cursor:pointer"><b>Công trình đã xóa khỏi app</b> <span class="nho">bấm để xem và khôi phục</span></summary><div id="ctXoaND" style="margin-top:8px"></div></details>` : '');
   if ($('#ctNgay')) $('#ctNgay').valueAsDate = new Date();
   const ve = () => {
     const q = P_khong($('#timCT').value), l = $('#locCT').value;
@@ -476,6 +480,7 @@ TRANG['#/ct'] = async (nd, q) => {
     <div class="nho" style="margin-top:10px">Giá trị, tiền</div>${aiThayHtml(x.ai_thay.tien) || '<div class="nho">—</div>'}
     <div class="nho" style="margin-top:10px">Thư mục Drive (do app chia sẻ)</div>${aiThayHtml(x.ai_thay.thu_muc) || '<div class="nho">Chưa chia sẻ cho ai</div>'}</div>`;
   if (x.hoat_dong) h += ctDot3Phai(x);
+  if (adm) h += `<div class="the"><h3>Xóa công trình</h3><p class="nho" style="margin:-6px 0 10px">Ẩn công trình này khỏi app với mọi người (kèm mốc, việc, phân công của nó). Excel, thư mục Drive và sổ thu chi không bị đụng tới. Khôi phục lại được ở cuối trang Công trình.</p><button class="nut phu" style="color:#b42318" onclick="xoaCT('${x.ma}')">Xóa công trình này khỏi app</button></div>`;
   h += '</div></div>';
   nd.innerHTML = h;
   if (x.thu_muc_id) goi('fileCT', { ma }).then(fs => { const e = $('#fileCT'); if (e) e.innerHTML = fs.map(f => `<div class="dong" data-l="${esc(/^https:\/\//.test(f.link || '') ? f.link : '')}" onclick="if(this.dataset.l)window.open(this.dataset.l,'_blank','noopener')"><div class="chinh"><b>${f.thu_muc ? '📁 ' : ''}${esc(f.ten)}</b><div class="nho">${esc(f.nguoi)} · ${f.luc ? new Date(f.luc).toLocaleString('vi-VN') : ''}</div></div>${ic('mo', 'width:16px;height:16px;color:var(--phu)')}</div>`).join('') || '<div class="rong nho">Không có file</div>'; }).catch(e => { const el = $('#fileCT'); if (el) el.innerHTML = `<div class="rong nho">${esc(e.message)}</div>`; });
@@ -707,6 +712,60 @@ function moLuong(ma) {
   $('#blForm').classList.remove('an'); $('#blForm').scrollIntoView({ behavior: 'smooth' });
 }
 async function taoLuong(thang) { const r = await ghi('taoLuongThang', { thang }, null); bao(r.them ? 'Đã tạo ' + r.them + ' dòng' : 'Tháng này đã đủ dòng cho nhân viên'); }
+
+/* ---------- xóa (ẩn) công trình, khôi phục: chỉ quản trị ---------- */
+async function xoaCT(ma) {
+  const x = CACHE.ctDang; if (!x || x.ma !== ma) return;
+  if (!confirm('Xóa công trình “' + x.ten + '” khỏi app?\n\nCông trình cùng mốc, việc, phân công của nó sẽ không còn hiện với mọi người. Excel, thư mục Drive và sổ thu chi không bị đụng tới. Khôi phục lại được ở cuối trang Công trình.')) return;
+  const lyDo = prompt('Lý do xóa (không bắt buộc):', '');
+  if (lyDo === null) return;
+  bao('Đang xóa…', 30000);
+  try {
+    await goi('xoaCT', { ma, ly_do: lyDo });
+    CACHE.ct = null; CACHE.viec = null; CACHE.ctDang = null;
+    try { ['congTrinh', 'viec', 'tienDo', 'trangChu'].forEach(a => localStorage.removeItem(khoaLuu(a))); } catch (e) {}
+    bao('Đã xóa khỏi app. Khôi phục được ở cuối trang Công trình.', 6000);
+    location.hash = '#/cong-trinh';
+  } catch (e) { bao(e.message, 6000); }
+}
+async function napCTXoa(e) {
+  if (!e.open) return;
+  const nd = $('#ctXoaND'); nd.innerHTML = '<div class="nho">Đang tải…</div>';
+  try {
+    const ds = await goi('ctDaXoa', {}, true);
+    if (!$('#ctXoaND')) return;
+    $('#ctXoaND').innerHTML = ds.map(c => `<div class="dong" style="cursor:default"><div class="chinh"><b>${esc(c.ten)}</b><div class="nho">Xóa ${esc(lucNgan(c.luc))} · ${esc(c.nguoi)}${c.ly_do ? ' · ' + esc(c.ly_do) : ''}</div></div><button class="nut phu" style="flex:none" onclick="khoiPhucCT('${esc(c.ma)}')">Khôi phục</button></div>`).join('') || '<div class="nho">Chưa xóa công trình nào.</div>';
+  } catch (er) { if ($('#ctXoaND')) $('#ctXoaND').innerHTML = `<div class="nho">${esc(er.message)}</div>`; }
+}
+async function khoiPhucCT(ma) { CACHE.ct = null; CACHE.viec = null; await ghi('khoiPhucCT', { ma }, 'Đã khôi phục công trình'); }
+
+/* ---------- trợ lý AI: ai đăng nhập được cũng hỏi được; trả lời theo đúng số liệu người hỏi được xem ---------- */
+let AI_LS = [];
+const aiChu = t => esc(t).replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>');
+function veAI() {
+  const e = $('#aiND'); if (!e) return;
+  e.innerHTML = AI_LS.map(m => m.vai === 'toi' ? `<div class="ai-toi">${esc(m.noi_dung)}</div>` : `<div class="ai-${m.vai}">${m.vai === 'ai' ? aiChu(m.noi_dung) : esc(m.noi_dung)}</div>`).join('') ||
+    `<div class="nho" style="margin:6px 0 12px">Ví dụ: “Công trình nào đang trễ mốc?”, “Tuần này tôi có việc gì tới hạn?”, “Đường Yên Bình đang ở bước nào?”</div>`;
+  const k = $('#hopND'); k.scrollTop = k.scrollHeight; $('#hop').scrollTop = $('#hop').scrollHeight;
+}
+function moAI() {
+  moHop(dauHop('Hỏi trợ lý AI') + `<p class="nho" style="margin:-4px 0 8px">AI trả lời theo số liệu anh/chị được xem trong app. AI có thể sai: việc quan trọng thì mở mục gốc kiểm lại.${ME.ai === false ? (ME.vai === 'admin' ? ' <b style="color:#b42318">Chưa cài khóa AI nên chưa hỏi được</b> (Apps Script → Cài đặt dự án → Thuộc tính tập lệnh → AI_KEY).' : ' <b style="color:#b42318">Trợ lý AI chưa được bật, báo anh Khuê.</b>') : ''}</p>
+    <div id="aiND"></div>
+    <div class="hang" style="align-items:flex-end"><textarea id="aiHoi" rows="2" style="flex:3" placeholder="Gõ câu hỏi…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();guiAI()}"></textarea><button class="nut" id="aiGui" style="flex:none" onclick="guiAI()">Hỏi</button></div>
+    ${AI_LS.length ? '<p style="margin:8px 0 0"><a class="nho" href="javascript:void 0" onclick="AI_LS=[];veAI()">Xóa cuộc trò chuyện này</a></p>' : ''}`);
+  veAI(); $('#aiHoi').focus();
+}
+async function guiAI() {
+  const o = $('#aiHoi'), t = o ? o.value.trim() : ''; if (!t || AI_LS.some(m => m.vai === 'cho')) return;
+  o.value = '';
+  const lichSu = AI_LS.filter(m => m.vai === 'toi' || m.vai === 'ai').slice(-6).map(m => ({ vai: m.vai, noi_dung: m.noi_dung }));
+  AI_LS.push({ vai: 'toi', noi_dung: t }, { vai: 'cho', noi_dung: 'Đang trả lời…' }); veAI();
+  let kq;
+  try { const r = await goi('hoiAI', { cau_hoi: t, lich_su: lichSu }); kq = { vai: 'ai', noi_dung: r.tra_loi }; }
+  catch (e) { kq = { vai: 'loi', noi_dung: e.message }; }
+  AI_LS = AI_LS.filter(m => m.vai !== 'cho'); AI_LS.push(kq); veAI();
+  const o2 = $('#aiHoi'); if (o2) o2.focus();
+}
 
 /* =================== ĐỢT 3: CÔNG VIỆC THEO CÔNG TRÌNH =================== */
 const TT_MAU = { 'Chưa làm': 't-xam', 'Đang làm': 't-dang', 'Chờ kiểm tra': 't-vang', 'Xong': 't-xong', 'Tạm dừng': 't-xam' };
@@ -1210,7 +1269,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.5.8 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.5.9 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
