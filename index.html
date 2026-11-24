@@ -208,7 +208,7 @@ function khoiDong() {
   google.accounts.id.prompt();
 }
 /* ---------- tải nhanh: hiện số liệu lần trước ngay, cập nhật ngầm ---------- */
-const DOC = new Set(['ctDaXoa', 'me', 'trangChu', 'congTrinh', 'ctChiTiet', 'thuChi', 'congNo', 'vanPhong', 'danhBa', 'heSo', 'choDuyet', 'fileCT', 'nguoiChiTiet', 'bangLuong', 'viec', 'viecChiTiet', 'tienDo', 'hieuSuat', 'mauMoc', 'mauQuyTrinh', 'tinhTrang']);
+const DOC = new Set(['ctDaXoa', 'me', 'trangChu', 'congTrinh', 'ctChiTiet', 'thuChi', 'congNo', 'vanPhong', 'danhBa', 'heSo', 'doiTac', 'choDuyet', 'fileCT', 'nguoiChiTiet', 'bangLuong', 'viec', 'viecChiTiet', 'tienDo', 'hieuSuat', 'mauMoc', 'mauQuyTrinh', 'tinhTrang']);
 let NHANH = false, TRUNG = false, EMAIL = '', LUOT = 0;
 const luuDoc = k => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } };
 const luuGhi = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { try { Object.keys(localStorage).filter(x => x.startsWith('ktc:')).forEach(x => localStorage.removeItem(x)); } catch (e2) {} } };
@@ -363,7 +363,7 @@ async function dinhTuyen(moi) {
 /* tải bản mới vào bộ nhớ (không vẽ); lần vẽ lại đọc từ bộ nhớ vừa cập nhật */
 async function chayMoi(duong, tham) {
   const can = { '#/': ['trangChu'].concat(ME.quyen.thuchi ? ['thuChi'] : []), '#/cong-trinh': ['congTrinh'], '#/thu-chi': ['thuChi', 'congTrinh'], '#/cong-no': ['congNo'], '#/van-phong': ['vanPhong'],
-    '#/cho-duyet': ['choDuyet'], '#/danh-ba': ['danhBa'], '#/he-so': ['heSo'], '#/ct': ['ctChiTiet'], '#/nguoi': ['nguoiChiTiet'], '#/bang-luong': ['bangLuong'], '#/viec': ['viec'], '#/tien-do': ['tienDo'], '#/hieu-suat': ['hieuSuat', 'tienDo'], '#/mau': ['mauQuyTrinh'], '#/he-thong': ['tinhTrang'] }[duong] || [];
+    '#/cho-duyet': ['choDuyet'], '#/danh-ba': ['danhBa'], '#/he-so': ['doiTac'], '#/ct': ['ctChiTiet'], '#/nguoi': ['nguoiChiTiet'], '#/bang-luong': ['bangLuong'], '#/viec': ['viec'], '#/tien-do': ['tienDo'], '#/hieu-suat': ['hieuSuat', 'tienDo'], '#/mau': ['mauQuyTrinh'], '#/he-thong': ['tinhTrang'] }[duong] || [];
   const qq = new URLSearchParams(tham || ''), p = duong === '#/ct' || duong === '#/nguoi' ? { ma: qq.get('ma') } : duong === '#/bang-luong' ? { thang: qq.get('thang') || homNay().slice(0, 7) } : {};
   await Promise.all(can.map(a => goi(a, p, true)));
 }
@@ -670,31 +670,92 @@ async function luuNg(ma) { await ghi('luuNguoi', { ma, ngay_vao: $('#ngVao').val
 const COT_DT = [['Đối tượng', 'Đối tác / người', 'text'], ['Loại', 'Loại (CTV, đối tác, chủ đầu tư…)', 'text'], ['Loại công trình', 'Loại công trình', 'text'], ['Loại việc', 'Loại việc', 'text'],
   ['Tỷ lệ %', 'Hệ số / tỷ lệ %', 'text'], ['Bên nhận', 'Bên nhận', 'text'], ['Chi chung', 'Chi chung', 'text'], ['Chi tư', 'Chi tư', 'text'], ['Chủ đầu tư', 'Chủ đầu tư', 'text'],
   ['Người thống nhất', 'Người thống nhất', 'text'], ['Vị trí công tác', 'Vị trí công tác người thống nhất', 'text'], ['Ngày thống nhất', 'Ngày thống nhất', 'date'], ['Điều kiện', 'Điều kiện', 'text'], ['Ghi chú', 'Ghi chú', 'text']];
+/* 0.7.4: hồ sơ đối tác cá nhân, doanh nghiệp; thỏa thuận nằm trong thẻ của từng hồ sơ */
+const TRUONG_DN = [['ten', 'Tên đầy đủ'], ['ten_goi', 'Tên hay gọi (cách nhau dấu phẩy)'], ['mst', 'Mã số thuế'], ['dia_chi', 'Địa chỉ'], ['dai_dien', 'Người đại diện'], ['chuc_vu', 'Chức vụ người đại diện'],
+  ['quan_he', 'Quan hệ với KTC'], ['lien_he', 'Người liên hệ'], ['dien_thoai', 'Điện thoại'], ['email', 'Email'], ['ma_ct', 'Công trình ghi thêm (mã, cách nhau dấu phẩy)'], ['ghi_chu', 'Ghi chú'], ['nguon', 'Nguồn thông tin']];
+const TRUONG_CN = [['ten', 'Họ tên'], ['ten_goi', 'Tên hay gọi (cách nhau dấu phẩy)'], ['don_vi', 'Đơn vị / doanh nghiệp'], ['chuc_vu', 'Chức vụ'], ['quan_he', 'Quan hệ với KTC'], ['dien_thoai', 'Điện thoại'],
+  ['email', 'Email'], ['ma_ct', 'Công trình ghi thêm (mã, cách nhau dấu phẩy)'], ['ghi_chu', 'Ghi chú'], ['nguon', 'Nguồn thông tin']];
+const khoaDT = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[đĐ]/g, 'd').toLowerCase().replace(/[^a-z0-9]/g, '');
+const tenGoiDT = x => [x.ten].concat(String(x.ten_goi || '').split(/[,;\/]/)).map(t => t.trim()).filter(Boolean);
+const idHS = c => 'hs_' + c.replace(/\W/g, '_');
+function dongTT(r, sua) {
+  return `<div class="dong"><div class="chinh"><b>${esc(r['Loại việc'] || '')}${r['Loại công trình'] ? ' – ' + esc(r['Loại công trình']) : ''}</b> <span class="ma">${esc(r['Mã HS'])}</span>
+    <div class="nho">${[r['Bên nhận'] && 'Bên nhận: ' + r['Bên nhận'], r['Chi chung'] && 'Chi chung: ' + r['Chi chung'], r['Chi tư'] && 'Chi tư: ' + r['Chi tư'], r['Chủ đầu tư'] && 'CĐT: ' + r['Chủ đầu tư'], r['Người thống nhất'] && 'Thống nhất với: ' + r['Người thống nhất'] + (r['Vị trí công tác'] ? ' (' + r['Vị trí công tác'] + ')' : ''), r['Ngày thống nhất'] && 'Ngày ' + ngay(r['Ngày thống nhất']), r['Điều kiện']].filter(Boolean).map(esc).join(' · ')}</div>
+    ${r['Nội dung gốc (file Excel)'] ? `<div class="nho" style="font-style:italic">Gốc: ${esc(r['Nội dung gốc (file Excel)'])}</div>` : ''}</div>
+    <div style="text-align:right;flex:none"><b style="font-size:16px">${esc(r['Tỷ lệ %'] == null ? '' : r['Tỷ lệ %'])}${String(r['Tỷ lệ %'] == null ? '' : r['Tỷ lệ %']).trim() && !/%/.test(r['Tỷ lệ %']) ? '%' : ''}</b><div style="margin-top:4px">${/chờ/i.test(r['Trạng thái']) ? '<span class="tag t-dang">Chờ xác nhận</span>' : `<span class="tag t-xong">${esc(r['Trạng thái'] || 'Đã xác nhận')}</span>`}</div>
+    ${sua ? `<div style="margin-top:6px;display:flex;gap:6px;justify-content:flex-end">${/chờ/i.test(r['Trạng thái']) ? `<button class="nut phu" onclick="xacNhanHS('${r['Mã HS']}')">Xác nhận</button>` : ''}<button class="nut phu" onclick="moHS('${r['Mã HS']}')">Sửa</button></div>` : ''}</div></div>`;
+}
 TRANG['#/he-so'] = async nd => {
-  const ds = CACHE.hs = await goi('heSo'), sua = ME.quyen.heso > 1;
-  const nhom = {}; ds.forEach(r => (nhom[r['Đối tượng'] || '(chưa ghi)'] = nhom[r['Đối tượng'] || '(chưa ghi)'] || []).push(r));
-  const ten = Object.keys(nhom).sort((a, b) => a.localeCompare(b, 'vi')), cho = ds.filter(r => /chờ/i.test(r['Trạng thái'])).length;
-  nd.innerHTML = tieuDe('Đối tác', `${ten.length} đối tác · ${ds.length} thỏa thuận${cho ? ` · <b style="color:var(--cam)">${cho} chờ anh xác nhận</b>` : ''}`, sua ? `<button class="nut vang" style="flex:none" onclick="moHS('')">+ Thêm thỏa thuận</button>` : '') +
-    `<div class="the an" id="hsForm"><h3 id="hsTieuDe">Thỏa thuận</h3><div class="luoi" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 12px;margin:0">${COT_DT.map(c => `<div><label>${c[1]}</label><input id="hs_${c[0].replace(/\W/g, '_')}" type="${c[2]}"></div>`).join('')}</div>
+  const d = CACHE.dt = await goi('doiTac'), ds = CACHE.hs = d.hs || [], dt = d.dt || [], sua = ME.quyen.heso > 1;
+  const theoHS = {}, le = {};
+  ds.forEach(r => {
+    const h = (r['Mã ĐT'] && dt.find(x => x.ma === r['Mã ĐT'])) || dt.find(x => tenGoiDT(x).some(a => khoaDT(a) && khoaDT(a) === khoaDT(r['Đối tượng'])));
+    if (h) (theoHS[h.ma] = theoHS[h.ma] || []).push(r); else { const t = r['Đối tượng'] || '(chưa ghi)'; (le[t] = le[t] || []).push(r); }
+  });
+  const leTen = CACHE.leTen = Object.keys(le).sort((a, b) => a.localeCompare(b, 'vi'));
+  const cho = ds.filter(r => /chờ/i.test(r['Trạng thái'])).length, soDN = dt.filter(x => x.loai === 'Doanh nghiệp').length;
+  nd.innerHTML = tieuDe('Đối tác', `${soDN} doanh nghiệp · ${dt.length - soDN} cá nhân · ${ds.length} thỏa thuận${cho ? ` · <b style="color:var(--cam)">${cho} chờ anh xác nhận</b>` : ''}`,
+      sua ? `<div style="display:flex;gap:8px;flex-wrap:wrap;flex:none"><button class="nut vang" style="flex:none" onclick="moDT('', 'Cá nhân')">+ Thêm cá nhân</button><button class="nut vang" style="flex:none" onclick="moDT('', 'Doanh nghiệp')">+ Thêm doanh nghiệp</button></div>` : '') +
+    `<div class="the an" id="dtForm"><h3 id="dtTieuDe">Hồ sơ</h3><div class="luoi" id="dtO" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 12px;margin:0"></div>
+      <datalist id="dsQH">${(d.quan_he || []).map(t => `<option value="${esc(t)}">`).join('')}</datalist>
+      <p style="margin:14px 0 0" class="hang"><button class="nut" style="flex:none" id="dtLuu">Lưu hồ sơ</button><button class="nut phu" style="flex:none" onclick="$('#dtForm').classList.add('an')">Đóng</button><button class="nut phu an" style="flex:none;color:#b42318" id="dtXoa">Xóa hồ sơ</button>
+      <span class="nho">Công trình làm cùng app tự lấy theo mối, dấu từng bộ mốc, dấu cả công trình; ô "Công trình ghi thêm" để nối tay. Không ghi số tài khoản ngân hàng.</span></p></div>
+    <div class="the an" id="hsForm"><h3 id="hsTieuDe">Thỏa thuận</h3><div class="luoi" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 12px;margin:0">${COT_DT.map(c => `<div><label>${c[1]}</label><input id="${idHS(c[0])}" type="${c[2]}"></div>`).join('')}</div>
       <p style="margin:14px 0 0" class="hang"><button class="nut" style="flex:none" id="hsLuu">Lưu</button><button class="nut phu" style="flex:none" onclick="$('#hsForm').classList.add('an')">Đóng</button><span class="nho">Mỗi lần sửa đều lưu lịch sử giá trị cũ.</span></p></div>
-    <div class="the" style="padding:12px 14px"><input id="hsTim" placeholder="Tìm đối tác, loại việc, chủ đầu tư…"></div><div id="hsDS"></div>`;
-  const ve = () => {
-    const q = $('#hsTim').value.toLowerCase();
-    $('#hsDS').innerHTML = ten.filter(t => !q || (t + ' ' + nhom[t].map(r => Object.values(r).join(' ')).join(' ')).toLowerCase().includes(q)).map(t => `<div class="the doitac"><h3><span>${esc(t)} <span class="nho" style="font-weight:400">${esc(nhom[t][0]['Loại'] || '')}</span></span><span class="chip">${nhom[t].length} thỏa thuận</span></h3>
-      ${nhom[t].map(r => `<div class="dong"><div class="chinh"><b>${esc(r['Loại việc'] || '')}${r['Loại công trình'] ? ' – ' + esc(r['Loại công trình']) : ''}</b> <span class="ma">${esc(r['Mã HS'])}</span>
-        <div class="nho">${[r['Bên nhận'] && 'Bên nhận: ' + r['Bên nhận'], r['Chi chung'] && 'Chi chung: ' + r['Chi chung'], r['Chi tư'] && 'Chi tư: ' + r['Chi tư'], r['Chủ đầu tư'] && 'CĐT: ' + r['Chủ đầu tư'], r['Người thống nhất'] && 'Thống nhất với: ' + r['Người thống nhất'] + (r['Vị trí công tác'] ? ' (' + r['Vị trí công tác'] + ')' : ''), r['Ngày thống nhất'] && 'Ngày ' + ngay(r['Ngày thống nhất']), r['Điều kiện']].filter(Boolean).map(esc).join(' · ')}</div>
-        ${r['Nội dung gốc (file Excel)'] ? `<div class="nho" style="font-style:italic">Gốc: ${esc(r['Nội dung gốc (file Excel)'])}</div>` : ''}</div>
-        <div style="text-align:right;flex:none"><b style="font-size:16px">${esc(r['Tỷ lệ %'] == null ? '' : r['Tỷ lệ %'])}${String(r['Tỷ lệ %'] == null ? '' : r['Tỷ lệ %']).trim() && !/%/.test(r['Tỷ lệ %']) ? '%' : ''}</b><div style="margin-top:4px">${/chờ/i.test(r['Trạng thái']) ? '<span class="tag t-dang">Chờ xác nhận</span>' : `<span class="tag t-xong">${esc(r['Trạng thái'] || 'Đã xác nhận')}</span>`}</div>
-        ${sua ? `<div style="margin-top:6px;display:flex;gap:6px;justify-content:flex-end">${/chờ/i.test(r['Trạng thái']) ? `<button class="nut phu" onclick="xacNhanHS('${r['Mã HS']}')">Xác nhận</button>` : ''}<button class="nut phu" onclick="moHS('${r['Mã HS']}')">Sửa</button></div>` : ''}</div></div>`).join('')}</div>`).join('') || '<div class="the rong">Không có đối tác phù hợp</div>';
+    <div class="the" style="padding:12px 14px"><div class="hang"><input id="hsTim" placeholder="Tìm tên, mã số thuế, quan hệ, công trình, loại việc…" style="flex:3;min-width:200px"><select id="hsLoc" style="flex:1;min-width:150px"><option value="">Tất cả</option><option>Doanh nghiệp</option><option>Cá nhân</option><option value="le">Thỏa thuận chưa có hồ sơ</option></select></div></div><div id="hsDS"></div>`;
+  const o = (n, v) => v ? `<div><span class="nho">${n}</span><div>${esc(v)}</div></div>` : '';
+  const theDT = x => {
+    const tt = theoHS[x.ma] || [], dn = x.loai === 'Doanh nghiệp', goi = tenGoiDT(x), tieu = goi[1] || x.ten;
+    const qh = String(x.quan_he || '').split(/[,;]/).map(t => t.trim()).filter(Boolean);
+    return `<div class="the doitac" data-ma="${esc(x.ma)}"><h3><span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${esc(tieu)} <span class="tag ${dn ? 't-dang' : 't-xam'}">${dn ? 'Doanh nghiệp' : 'Cá nhân'}</span>${qh.map(t => `<span class="tag t-vang">${esc(t)}</span>`).join('')}</span><span class="chip">${tt.length} thỏa thuận</span></h3>
+      ${tieu !== x.ten ? `<div style="font-weight:600;margin:-4px 0 8px">${esc(x.ten)}</div>` : ''}
+      <div class="luoi" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 14px;margin:0 0 8px">${dn ? o('Mã số thuế', x.mst) + o('Địa chỉ', x.dia_chi) + o('Người đại diện', [x.dai_dien, x.chuc_vu].filter(Boolean).join(' – ')) : o('Đơn vị', x.don_vi) + o('Chức vụ', x.chuc_vu)}${o('Người liên hệ', x.lien_he)}${o('Điện thoại', x.dien_thoai)}${o('Email', x.email)}</div>
+      ${(x.cong_trinh || []).length ? `<div class="nho" style="margin-bottom:6px">Công trình: ${x.cong_trinh.map(c => `<a href="#/ct?ma=${esc(c.ma)}">${esc(String(c.ma).replace(/^KTC\d\d-/, ''))} ${esc(c.ten)}</a> (${esc(c.vai.join(', '))})`).join(' · ')}</div>` : ''}
+      ${x.ghi_chu ? `<div class="nho">${esc(x.ghi_chu)}</div>` : ''}${x.nguon ? `<div class="nho" style="font-style:italic">Nguồn: ${esc(x.nguon)}</div>` : ''}
+      ${tt.map(r => dongTT(r, sua)).join('')}
+      ${sua ? `<div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap"><button class="nut phu" onclick="moHS('', '${esc(x.ma)}')">+ Thỏa thuận</button><button class="nut phu" onclick="moDT('${esc(x.ma)}')">Sửa hồ sơ</button></div>` : ''}</div>`;
   };
-  $('#hsTim').oninput = ve; ve();
+  const theLe = (t, i) => `<div class="the doitac"><h3><span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${esc(t)} <span class="nho" style="font-weight:400">${esc(le[t][0]['Loại'] || '')}</span><span class="tag t-xam">chưa có hồ sơ</span></span><span class="chip">${le[t].length} thỏa thuận</span></h3>
+      ${le[t].map(r => dongTT(r, sua)).join('')}
+      ${sua ? `<div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap"><button class="nut phu" onclick="moHS('', '', ${i})">+ Thỏa thuận</button><button class="nut phu" onclick="moDT('', 'Cá nhân', ${i})">Tạo hồ sơ cá nhân</button></div>` : ''}</div>`;
+  const thu = [...dt].sort((a, b) => (a.loai === b.loai ? 0 : a.loai === 'Doanh nghiệp' ? -1 : 1) || (tenGoiDT(a)[1] || a.ten).localeCompare(tenGoiDT(b)[1] || b.ten, 'vi'));
+  const ve = () => {
+    const q = $('#hsTim').value.toLowerCase(), loc = $('#hsLoc').value;
+    const coQ = t => !q || t.toLowerCase().includes(q);
+    const a = loc === 'le' ? [] : thu.filter(x => (!loc || x.loai === loc) && coQ([x.ten, x.ten_goi, x.mst, x.dia_chi, x.dai_dien, x.don_vi, x.quan_he, x.lien_he, x.ghi_chu, (x.cong_trinh || []).map(c => c.ma + ' ' + c.ten).join(' '), (theoHS[x.ma] || []).map(r => Object.values(r).join(' ')).join(' ')].join(' ')));
+    const l = loc && loc !== 'le' ? [] : leTen.map((t, i) => [t, i]).filter(([t]) => coQ(t + ' ' + le[t].map(r => Object.values(r).join(' ')).join(' ')));
+    $('#hsDS').innerHTML = a.map(theDT).join('') + l.map(([t, i]) => theLe(t, i)).join('') || '<div class="the rong">Không có đối tác phù hợp</div>';
+  };
+  $('#hsTim').oninput = ve; $('#hsLoc').onchange = ve; ve();
 };
-function moHS(ma) {
-  const r = (CACHE.hs || []).find(x => x['Mã HS'] === ma) || {};
-  $('#hsTieuDe').textContent = ma ? 'Sửa thỏa thuận ' + ma : 'Thêm thỏa thuận';
-  COT_DT.forEach(c => { const e = $('#hs_' + c[0].replace(/\W/g, '_')); e.value = c[2] === 'date' ? (String(r[c[0]] || '').slice(0, 10)) : (r[c[0]] == null ? '' : r[c[0]]); });
-  $('#hsLuu').onclick = async () => { const p = { 'Mã HS': ma }; COT_DT.forEach(c => p[c[0]] = $('#hs_' + c[0].replace(/\W/g, '_')).value.trim()); if (!ma) p['Trạng thái'] = 'Đã xác nhận ' + new Date().toLocaleDateString('vi-VN'); await ghi('luuHeSo', p, 'Đã lưu'); };
-  $('#hsForm').classList.remove('an'); $('#hsForm').scrollIntoView({ behavior: 'smooth' });
+function moDT(ma, loai, iTen) {
+  const x = ((CACHE.dt && CACHE.dt.dt) || []).find(r => r.ma === ma) || {}; loai = x.loai || loai || 'Doanh nghiệp';
+  const dn = loai === 'Doanh nghiệp', tr = dn ? TRUONG_DN : TRUONG_CN, rong = ['dia_chi', 'ghi_chu', 'nguon', 'ma_ct'];
+  $('#dtTieuDe').textContent = (ma ? 'Sửa hồ sơ ' : 'Thêm ') + (dn ? 'doanh nghiệp' : 'cá nhân');
+  $('#dtO').innerHTML = tr.map(c => `<div${rong.includes(c[0]) ? ' style="grid-column:1/-1"' : ''}><label>${c[1]}</label><input id="dt_${c[0]}"${c[0] === 'quan_he' ? ' list="dsQH"' : ''}${c[0] === 'mst' ? ' inputmode="numeric" maxlength="14"' : ''} value="${esc(x[c[0]] == null ? '' : x[c[0]])}"></div>`).join('');
+  if (!ma && iTen != null && CACHE.leTen) $('#dt_ten').value = CACHE.leTen[iTen] || '';
+  $('#dtXoa').classList.toggle('an', !ma);
+  $('#dtLuu').onclick = async () => {
+    const p = { ma, loai }; tr.forEach(c => p[c[0]] = $('#dt_' + c[0]).value.trim());
+    if (!p.ten) { bao(dn ? 'Điền tên doanh nghiệp' : 'Điền họ tên'); $('#dt_ten').focus(); return; }
+    await ghi('luuDoiTac', p, 'Đã lưu hồ sơ');
+  };
+  $('#dtXoa').onclick = async () => { if (!confirm('Xóa hồ sơ này? Các thỏa thuận vẫn giữ nguyên.')) return; await ghi('luuDoiTac', { ma, xoa: true }, 'Đã xóa hồ sơ'); };
+  $('#hsForm').classList.add('an'); $('#dtForm').classList.remove('an'); $('#dtForm').scrollIntoView({ behavior: 'smooth' });
+}
+function moHS(ma, maDT, iTen) {
+  const r = (CACHE.hs || []).find(x => x['Mã HS'] === ma) || {}, h = maDT ? ((CACHE.dt && CACHE.dt.dt) || []).find(x => x.ma === maDT) : null;
+  const tenLe = iTen != null && CACHE.leTen ? CACHE.leTen[iTen] : '', ten = h ? (tenGoiDT(h)[1] || h.ten) : tenLe;
+  $('#hsTieuDe').textContent = ma ? 'Sửa thỏa thuận ' + ma : 'Thêm thỏa thuận' + (ten ? ' – ' + ten : '');
+  COT_DT.forEach(c => { const e = $('#' + idHS(c[0])); e.value = c[2] === 'date' ? (String(r[c[0]] || '').slice(0, 10)) : (r[c[0]] == null ? '' : r[c[0]]); });
+  if (!ma && ten) $('#' + idHS('Đối tượng')).value = ten;
+  if (!ma && h && h.loai === 'Doanh nghiệp') $('#' + idHS('Loại')).value = 'Đối tác';
+  $('#hsLuu').onclick = async () => {
+    const p = { 'Mã HS': ma }; COT_DT.forEach(c => p[c[0]] = $('#' + idHS(c[0])).value.trim());
+    if (!ma) { p['Trạng thái'] = 'Đã xác nhận ' + new Date().toLocaleDateString('vi-VN'); if (h) p['Mã ĐT'] = h.ma; }
+    await ghi('luuHeSo', p, 'Đã lưu');
+  };
+  $('#dtForm').classList.add('an'); $('#hsForm').classList.remove('an'); $('#hsForm').scrollIntoView({ behavior: 'smooth' });
 }
 async function xacNhanHS(ma) { await ghi('luuHeSo', { 'Mã HS': ma, 'Trạng thái': 'Đã xác nhận ' + new Date().toLocaleDateString('vi-VN') }, 'Đã xác nhận'); }
 
@@ -740,7 +801,7 @@ function nhanPL(x) {
 function khungPL(x) {
   const k = x.dau ? x.dau.kieu : '', td = String(x.tam_dung || '').split(' | ');
   return `<div class="the" id="thePL"><h3>Phân loại công trình</h3>
-    <p class="nho" style="margin:-6px 0 10px">Chỉ anh thấy và sửa được khung này. Nhãn phân loại hiện cạnh tên công trình trong danh sách; phần "gửi dấu" chỉ quản trị và kế toán thấy.</p>
+    <p class="nho" style="margin:-6px 0 10px">Chỉ anh thấy và sửa được khung này. Nhãn phân loại hiện cạnh tên công trình trong danh sách. "KTC làm, gửi dấu công ty khác": người được phân công thấy công ty đứng dấu và thông tin của công ty đó (lấy ở trang Đối tác) để làm hồ sơ. "Người khác làm, gửi dấu KTC": chỉ quản trị và kế toán thấy.</p>
     <div class="hang"><div style="min-width:200px"><label>Tình trạng theo dõi</label><select id="plTD" onchange="doiPL()"><option value="">Đang theo dõi</option><option value="1" ${x.tam_dung ? 'selected' : ''}>Tạm dừng</option></select></div>
       <div id="plLyDoO" style="flex:2;min-width:200px" class="${x.tam_dung ? '' : 'an'}"><label>Lý do tạm dừng</label><input id="plLyDo" maxlength="200" value="${esc(td[2] || '')}" placeholder="Ví dụ: chờ chủ trương, sang năm làm"></div></div>
     ${x.tam_dung ? `<p class="nho" style="margin:6px 0 0">Tạm dừng từ ${esc(td[0] || '')}. Công trình tạm dừng không tính vào số đang làm và không nhắc mốc trễ.</p>` : ''}
@@ -748,7 +809,7 @@ function khungPL(x) {
         <option value="">KTC làm, dấu KTC</option>
         <option value="nhan" ${k === 'nhan' ? 'selected' : ''}>Người khác làm, gửi dấu KTC</option>
         <option value="gui" ${k === 'gui' ? 'selected' : ''}>KTC làm, gửi dấu công ty khác</option></select></div>
-      <div id="plBenO" style="flex:2;min-width:200px" class="${k ? '' : 'an'}"><label id="plBenN">${k === 'gui' ? 'Tên công ty đứng dấu' : 'Tên người hoặc đơn vị gửi dấu'}</label><input id="plBen" maxlength="80" value="${esc(x.dau ? x.dau.ben : '')}" placeholder="${k === 'gui' ? 'Ví dụ: Cty Condesco' : 'Ví dụ: anh Đạt'}"></div></div>
+      <div id="plBenO" style="flex:2;min-width:200px" class="${k ? '' : 'an'}"><label id="plBenN">${k === 'gui' ? 'Tên công ty đứng dấu' : 'Tên người hoặc đơn vị gửi dấu'}</label><input id="plBen" list="dsDau" maxlength="80" value="${esc(x.dau ? x.dau.ben : '')}" placeholder="${k === 'gui' ? 'Ví dụ: Cty Condesco' : 'Ví dụ: anh Đạt'}"></div></div>
     <div class="hang" style="margin-top:12px;align-items:center"><button class="nut" id="plLuu" style="flex:none" onclick="luuPL('${x.ma}')">Lưu phân loại</button>
       <span class="nho" id="plXem" style="flex:3">${nhanPL(x) || 'Chưa có nhãn nào.'}</span></div>
     <hr style="border:0;border-top:1px solid var(--vien);margin:14px 0 10px">
@@ -1218,15 +1279,25 @@ function duBaoChu(db) {
   else s += db.tam ? ' · đang tính lại dự báo…' : ' · chưa đủ dữ liệu để dự báo (cần hạn mốc cuối, hoặc từ 2 mốc có ngày xong)';
   return s;
 }
+/* 0.7.4: công ty đứng dấu hồ sơ (theo dấu từng bộ mốc, dấu cả công trình) – người được phân công thấy để làm hồ sơ */
+function theDauDN(x) {
+  const ds = x.dau_dn || []; if (!ds.length) return '';
+  const o = (n, v) => v ? `<div><span class="nho">${n}</span><div>${esc(v)}</div></div>` : '';
+  return `<div class="the" id="theDauDN"><h3>Đơn vị đứng dấu hồ sơ</h3>${ds.map(c => `<div style="padding:8px 0;border-top:1px solid #eaecf0">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px"><b>${esc(c.ten)}</b>${c.ten_goi ? `<span class="nho">(${esc(c.ten_goi)})</span>` : ''}<span class="tag t-vang">dấu ${esc(c.cho.join(', '))}</span></div>
+    <div class="luoi" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 14px;margin:0">${o('Mã số thuế', c.mst)}${o('Địa chỉ', c.dia_chi)}${o('Người đại diện', [c.dai_dien, c.chuc_vu].filter(Boolean).join(' – '))}${o('Người liên hệ', c.lien_he)}${o('Điện thoại', c.dien_thoai)}${o('Email', c.email)}</div></div>`).join('')}
+    <p class="nho" style="margin:8px 0 0">Thông tin lấy ở trang Đối tác, dùng để làm hồ sơ. Thiếu hoặc sai thì báo anh Khuê sửa.</p></div>`;
+}
 function theMoc(x) {
   const adm = ME.quyen.congtrinh > 1, bos = x.bo_moc || [], co = new Set(bos.map(b => b.loai)), conLai = (x.cac_loai_moc || []).filter(l => !co.has(l));
   const chon = (id, ds) => `<select id="${id}" style="max-width:260px">${ds.map(l => `<option>${esc(l)}</option>`).join('')}</select>`;
-  const them = adm && conLai.length ? `<div class="hang" style="margin-top:${bos.length ? 14 : 0}px;align-items:flex-end">${chon('mocLoai', conLai)}<input id="mocDau" placeholder="Dấu: để trống là KTC, hoặc tên công ty" style="max-width:260px"><button class="nut${bos.length ? ' phu' : ''}" style="flex:none" onclick="ganMoc('${x.ma}')">${bos.length ? '+ Thêm bộ mốc' : 'Gắn mốc'}</button></div>` : '';
-  if (!bos.length) return `<div class="the" id="theMoc"><h3>Mốc giai đoạn</h3>${adm ? `<p class="nho" style="margin:-6px 0 10px">Chọn bộ mốc cho công trình này. Một công trình gắn được nhiều bộ, mỗi bộ ghi dấu KTC hay dấu công ty khác. Tên các mốc sửa ở mục Mẫu & quy trình.</p>${them}` : '<div class="rong nho">Chưa gắn mốc giai đoạn</div>'}</div>`;
-  return `<div class="the" id="theMoc"><h3><span>Mốc giai đoạn${bos.length > 1 ? ` <span class="chip">${bos.length} bộ</span>` : ''}</span></h3>` + bos.map((b, bi) => {
+  const them = adm && conLai.length ? `<div class="hang" style="margin-top:${bos.length ? 14 : 0}px;align-items:flex-end">${chon('mocLoai', conLai)}<input id="mocDau" list="dsDau" placeholder="Dấu: để trống là KTC, hoặc tên công ty" style="max-width:260px"><button class="nut${bos.length ? ' phu' : ''}" style="flex:none" onclick="ganMoc('${x.ma}')">${bos.length ? '+ Thêm bộ mốc' : 'Gắn mốc'}</button></div>` : '';
+  const dsDau = adm && (x.goi_y_dau || []).length ? `<datalist id="dsDau">${x.goi_y_dau.map(t => `<option value="${esc(t)}">`).join('')}</datalist>` : '';
+  if (!bos.length) return `<div class="the" id="theMoc">${dsDau}<h3>Mốc giai đoạn</h3>${adm ? `<p class="nho" style="margin:-6px 0 10px">Chọn bộ mốc cho công trình này. Một công trình gắn được nhiều bộ, mỗi bộ ghi dấu KTC hay dấu công ty khác. Tên các mốc sửa ở mục Mẫu & quy trình.</p>${them}` : '<div class="rong nho">Chưa gắn mốc giai đoạn</div>'}</div>`;
+  return `<div class="the" id="theMoc">${dsDau}<h3><span>Mốc giai đoạn${bos.length > 1 ? ` <span class="chip">${bos.length} bộ</span>` : ''}</span></h3>` + bos.map((b, bi) => {
     const l = lopMoc(b.moc);
     return `<div class="bomoc"${bi ? ' style="border-top:1px solid #eaecf0;margin-top:14px;padding-top:14px"' : ''}><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><b style="font-weight:600">${esc(b.loai)}</b><span class="tag ${b.dau ? 't-vang' : 't-xam'}">${b.dau ? 'dấu ' + esc(b.dau) : 'dấu KTC'}</span></span>${adm ? `<a class="nho" href="javascript:void 0" onclick="$('#mocSua${bi}').classList.toggle('an')">Sửa bộ</a>` : ''}</div>
-      ${adm ? `<div id="mocSua${bi}" class="an" style="margin:10px 0"><div class="hang" style="align-items:flex-end"><div><label>Dấu (để trống là KTC)</label><input id="mocDau${bi}" value="${esc(b.dau)}" placeholder="Tên công ty"></div><button class="nut phu" style="flex:none" onclick="suaDauBo('${x.ma}',${bi})">Lưu dấu</button></div>
+      ${adm ? `<div id="mocSua${bi}" class="an" style="margin:10px 0"><div class="hang" style="align-items:flex-end"><div><label>Dấu (để trống là KTC)</label><input id="mocDau${bi}" list="dsDau" value="${esc(b.dau)}" placeholder="Tên công ty"></div><button class="nut phu" style="flex:none" onclick="suaDauBo('${x.ma}',${bi})">Lưu dấu</button></div>
         ${conLai.length ? `<div class="hang" style="margin-top:8px">${chon('mocDoi' + bi, conLai)}<button class="nut phu" style="flex:none" onclick="doiBo('${x.ma}',${bi})">Đổi sang bộ này</button></div>` : ''}
         <p style="margin:8px 0 0"><button class="nut phu" onclick="goBo('${x.ma}',${bi})">Gỡ bộ mốc này</button></p></div>` : ''}
       ${mocThanh(b.moc)}<div class="nho" style="margin-bottom:8px">${duBaoChu(b.du_bao)}</div>
@@ -1309,7 +1380,7 @@ function theViecCT(x) {
 }
 function ctDot3Trai(x) {
   const coQuyen = x.sua_moc || ME.vai !== 'duan';
-  return theMoc(x) + theViecCT(x) + `<div class="the"><h3><span>Biên bản họp, làm việc</span>${coQuyen ? `<button class="nut phu" style="padding:6px 12px" onclick="moBienBan('${x.ma}')">+ Ghi biên bản</button>` : ''}</h3>
+  return theMoc(x) + theDauDN(x) + theViecCT(x) + `<div class="the"><h3><span>Biên bản họp, làm việc</span>${coQuyen ? `<button class="nut phu" style="padding:6px 12px" onclick="moBienBan('${x.ma}')">+ Ghi biên bản</button>` : ''}</h3>
     ${x.bien_ban.map(b => `<details style="border-bottom:1px solid #f0f2f5;padding:8px 0"><summary style="cursor:pointer"><b>${esc(b.tieu_de)}</b> <span class="nho">${ngay(b.ngay)}${b.ket_luan.length ? ' · ' + b.ket_luan.length + ' kết luận' : ''}</span></summary>
       ${b.thanh_phan ? `<div class="nho" style="margin-top:6px">Thành phần: ${esc(b.thanh_phan)}</div>` : ''}${b.noi_dung ? `<div style="white-space:pre-wrap;margin-top:6px">${esc(b.noi_dung)}</div>` : ''}
       ${b.ket_luan.map(k => `<div class="dong"${k.ma_viec ? ` onclick="moViec('${k.ma_viec}')"` : ''}><span>${esc(k.viec)}</span><span class="nho" style="flex:none">${esc(tenNgan(k.nguoi))}${k.han ? ' · hạn ' + ngayNgan(k.han) : ''}</span></div>`).join('')}</details>`).join('') || '<div class="rong nho">Chưa có biên bản</div>'}</div>`;
@@ -1432,7 +1503,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.7.3 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.7.4 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
