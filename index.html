@@ -457,7 +457,7 @@ TRANG['#/ct'] = async (nd, q) => {
   const dang = x.phan_cong.filter(p => !p.den);
   CACHE.ctDang = x;
   let h = `<p style="margin:0 0 8px"><a href="#/cong-trinh" class="nho">← Danh sách công trình</a></p>` +
-    tieuDe(esc(x.ten), `Nhận ${ngay(x.ngay_nhan) || '—'} · Chủ trì ${esc(x.chu_tri || '—')}${ME.quyen.hopdong ? ' · Mối ' + esc(x.moi || '—') : ''}${x.nguon === 'App' ? ' · <span class="tag t-dang">chỉ có trên app</span>' : ''}`,
+    tieuDe(esc(x.ten), `Nhận ${ngay(x.ngay_nhan) || '—'} · Chủ trì ${esc(x.chu_tri || '—')}${ME.quyen.hopdong ? ' · Mối ' + esc(x.moi || '—') : ''}${x.nguon === 'App' || x.nguon === 'Zalo' ? ` · <span class="tag t-dang">chỉ có trên app${x.nguon === 'Zalo' ? ' (từ Zalo)' : ''}</span>` : ''}`,
       `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${tag(x.trang_thai)}${nhanPL(x)}${x.zalo ? `<a class="nut phu" href="${esc(x.zalo)}" target="_blank" rel="noopener" style="text-decoration:none" onclick="moZalo(event,this.href)">Nhóm Zalo</a>` : ''}${x.thu_muc_id ? `<a class="nut vang" href="https://drive.google.com/drive/folders/${x.thu_muc_id}" target="_blank" style="text-decoration:none">${ic('mo', 'width:16px;height:16px')}Thư mục hồ sơ</a>` : '<span class="tag t-xam">Chưa có thư mục Drive</span>'}</div>`);
   if (x.tien) {
     const t = x.tien;
@@ -597,11 +597,13 @@ async function luuVP() {
   const r = await ghi('themVanPhong', p, null); bao(r.trung ? 'Đã lưu – nghi trùng ' + r.trung : 'Đã lưu', 4000);
 }
 
-/* ---------- Chờ duyệt (0.7.1: mục "Tạo thư mục Drive", bấm duyệt là app tạo thư mục) ---------- */
-const MOC_TM = 'Tạo thư mục Drive';
+/* ---------- Chờ duyệt (0.7.1: mục "Tạo thư mục Drive", bấm duyệt là app tạo thư mục; 0.7.7: mục "Công trình mới" từ nhóm Zalo mới) ---------- */
+const MOC_TM = 'Tạo thư mục Drive', MOC_CTM = 'Công trình mới';
 TRANG['#/cho-duyet'] = async nd => {
-  const ds = (await goi('choDuyet')).filter(r => r['Trạng thái (chờ/duyệt/bỏ)'] === 'chờ'), sua = ME.quyen.choduyet > 1, soTM = ds.filter(r => r['Mốc tiến độ'] === MOC_TM).length;
-  nd.innerHTML = tieuDe('Chờ duyệt', `${ds.length} mục${soTM ? `, trong đó ${soTM} thư mục Drive cần tạo` : ''} · tiến độ lấy từ nhóm Zalo và trang web`) + (ds.map(r => {
+  const ds = (await goi('choDuyet')).filter(r => r['Trạng thái (chờ/duyệt/bỏ)'] === 'chờ'), sua = ME.quyen.choduyet > 1, soTM = ds.filter(r => r['Mốc tiến độ'] === MOC_TM).length,
+    soCTM = ds.filter(r => r['Mốc tiến độ'] === MOC_CTM).length, them = [soCTM ? `${soCTM} công trình mới` : '', soTM ? `${soTM} thư mục Drive cần tạo` : ''].filter(Boolean).join(', ');
+  nd.innerHTML = tieuDe('Chờ duyệt', `${ds.length} mục${them ? `, trong đó ${them}` : ''} · tiến độ lấy từ nhóm Zalo và trang web`) + (ds.map(r => {
+    if (r['Mốc tiến độ'] === MOC_CTM) return theCTM(r, sua);
     const tm = r['Mốc tiến độ'] === MOC_TM, ma = esc(r['Mã dòng']);
     return `<div class="the"><div class="nho"><span class="ma">${esc(r['Mã CT'])}</span> · ${tm ? `<span class="chip" style="background:var(--vangnhat);color:#7a5a00">${MOC_TM}</span>` : esc(r['Nguồn (Zalo/web)'])} · ${esc(r['Thời điểm gốc'])}</div>
     <p style="border-left:3px solid var(--vang);padding-left:10px;color:var(--phu)">${esc(r['Trích dẫn gốc'])}</p>${tm ? '<label>Tên thư mục (sửa được trước khi duyệt; muốn tạo trong thư mục con thì thêm "Tùng/" ở đầu)</label>' : ''}<textarea id="nd_${ma}" rows="2">${esc(r['Nội dung đề xuất'])}</textarea>
@@ -609,8 +611,33 @@ TRANG['#/cho-duyet'] = async nd => {
   }).join('') || '<div class="the rong">Không có mục nào chờ duyệt</div>');
 };
 async function duyet(ma, tt, tm) {
-  const r = await ghi('duyet', { ma, trang_thai: tt, noi_dung: $('#nd_' + ma).value }, tm && tt === 'duyệt' ? null : (tt === 'duyệt' ? 'Đã duyệt' : 'Đã bỏ'));
-  if (r && r.thu_muc) bao((r.da_co ? 'Đã gắn thư mục có sẵn: ' : 'Đã tạo thư mục: ') + r.thu_muc, 6000);
+  const p = { ma, trang_thai: tt, noi_dung: $('#nd_' + ma).value };
+  if (tm === 2) Object.assign(p, { ten: $('#ten_' + ma).value.trim(), ngay_nhan: $('#ngay_' + ma).value, moi: $('#moi_' + ma).value.trim(), zalo: $('#zl_' + ma).value.trim() });
+  const r = await ghi('duyet', p, tm && tt === 'duyệt' ? null : (tt === 'duyệt' ? 'Đã duyệt' : 'Đã bỏ'));
+  if (r && r.ct_moi) bao(`Đã thêm công trình ${r.ma} và ${r.da_co ? 'gắn thư mục có sẵn' : 'tạo thư mục'}: ${r.thu_muc}`, 7000);
+  else if (r && r.gan_ct_cu) bao(`Đã có công trình cùng tên (${r.ma}): ${r.da_co ? 'gắn thư mục có sẵn' : 'tạo thư mục'} ${r.thu_muc}`, 7000);
+  else if (r && r.thu_muc) bao((r.da_co ? 'Đã gắn thư mục có sẵn: ' : 'Đã tạo thư mục: ') + r.thu_muc, 6000);
+}
+/* 0.7.7: thẻ "Công trình mới": sửa tên, ngày nhận, mối thì tên thư mục đổi theo (giữ phần anh tự sửa) */
+function theCTM(r, sua) {
+  const ma = esc(r['Mã dòng']), ngay10 = String(r['Ngày nhận (đề xuất)'] || '').slice(0, 10), o = (id, v, them) => `<input id="${id}_${ma}" value="${esc(v || '')}" data-cu="${esc(v || '')}"${them || ''}>`;
+  return `<div class="the" id="ctm_${ma}"><div class="nho"><span class="chip" style="background:#e7f5ec;color:#1e6b3a">${MOC_CTM}</span> · ${esc(r['Nguồn (Zalo/web)'])}${r['Nhóm Zalo'] ? ` · nhóm “${esc(r['Nhóm Zalo'])}”` : ''} · ${esc(r['Thời điểm gốc'])}</div>
+    <p style="border-left:3px solid var(--vang);padding-left:10px;color:var(--phu);white-space:pre-line">${esc(r['Trích dẫn gốc'])}</p>
+    <div class="hang"><div style="flex:2"><label>Tên công trình</label>${o('ten', r['Tên công trình (đề xuất)'], ` oninput="doiCTM('${ma}','ten')" maxlength="300"`)}</div>
+      <div><label>Ngày nhận</label><input type="date" id="ngay_${ma}" value="${esc(ngay10)}" data-cu="${esc(ngay10)}" onchange="doiCTM('${ma}','ngay')"></div></div>
+    <div class="hang"><div><label>Mối</label>${o('moi', r['Mối (đề xuất)'], ` oninput="doiCTM('${ma}','moi')" maxlength="100" placeholder="Người đưa việc"`)}</div>
+      <div style="flex:2"><label>Link nhóm Zalo (nếu có)</label>${o('zl', r['Link nhóm Zalo'], ' placeholder="https://zalo.me/g/..."')}</div></div>
+    <label>Tên thư mục Drive (tự đổi theo ngày, tên, mối; sửa được; muốn tạo trong thư mục con thì thêm "Tùng/" ở đầu)</label>${o('nd', r['Nội dung đề xuất'])}
+    ${sua ? `<p class="hang" style="margin:10px 0 0;justify-content:flex-end"><button class="nut phu" style="flex:none" onclick="duyet('${ma}','bỏ')">Bỏ</button><button class="nut" style="flex:none" onclick="duyet('${ma}','duyệt',2)">Duyệt: thêm công trình, tạo thư mục</button></p>` : ''}</div>`;
+}
+function doiCTM(ma, truong) {
+  const o = $(`#${truong}_${ma}`), tm = $('#nd_' + ma), cu = o.dataset.cu || '', moi = o.value.trim();
+  let v = tm.value;
+  const m = /^((?:[^/]*\/)?)(\d{4}\.\d{1,2}\.\d{1,2}\.\s*)?(.*)$/.exec(v), truoc = m[1] + (m[2] || ''), than = m[3];
+  if (truong === 'ngay' && /^\d{4}-\d{2}-\d{2}$/.test(moi)) { const [y, th, d] = moi.split('-'); v = m[1] + `${y}.${Number(th)}.${Number(d)}. ` + than; }
+  else if (truong === 'moi') { v = cu && v.endsWith(' - ' + cu) ? v.slice(0, -(cu.length + 3)) : v; if (moi) v += ' - ' + moi; }
+  else if (truong === 'ten' && cu && than.startsWith(cu)) v = truoc + moi + than.slice(cu.length);
+  tm.value = v; o.dataset.cu = moi;
 }
 
 /* ---------- Danh bạ ---------- */
@@ -1530,7 +1557,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.7.6 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.7.7 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
