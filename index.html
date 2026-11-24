@@ -91,6 +91,13 @@ label{display:block;font-size:12.5px;color:var(--phu);font-weight:500;margin:10p
   .bang.co-the thead{display:none}.bang.co-the tr{display:block;border-bottom:1px solid var(--vien);padding:8px 4px}.bang.co-the td{display:flex;justify-content:space-between;gap:10px;border:0;padding:3px 8px}
   .bang.co-the td:before{content:attr(data-n);color:var(--phu);font-size:12px;flex:none}.bang.co-the td{text-align:right}.bang.co-the td:empty{display:none}
   .cuon{max-height:none;border:0}
+  .bang.ds-ct,.bang.ds-ct tbody{display:block}.bang.ds-ct thead{display:none}
+  .bang.ds-ct tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:12px 2px;border-bottom:1px solid var(--vien)}.bang.ds-ct tr:last-child{border-bottom:0}
+  .bang.ds-ct td{display:block;border:0;padding:0;font-size:12.5px;color:var(--phu);min-width:0;overflow-wrap:anywhere}
+  .bang.ds-ct td[data-k]:before{content:attr(data-k);margin-right:4px}.bang.ds-ct td.gt{color:var(--chu);font-weight:600}
+  .bang.ds-ct td.ten{order:-3;flex:1 1 0;font-size:15px;line-height:1.45;color:var(--chu)}.bang.ds-ct td.ten .tag{margin:2px 0}
+  .bang.ds-ct td.tt{order:-2;align-self:flex-start;margin-top:1px}.bang.ds-ct tr:after{content:'';order:-1;flex:1 1 100%;height:0;margin-top:-4px}.bang.ds-ct td:empty{display:none}.bang.ds-ct td.rong{flex:1 1 100%;text-align:center}
+  #timCT{flex:1 1 100%!important}
 }
 #sheet{position:fixed;inset:0;background:rgba(16,24,40,.45);z-index:15;display:none;align-items:flex-end}
 #sheet>div{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
@@ -363,7 +370,7 @@ async function dinhTuyen(moi) {
 /* tải bản mới vào bộ nhớ (không vẽ); lần vẽ lại đọc từ bộ nhớ vừa cập nhật */
 async function chayMoi(duong, tham) {
   const can = { '#/': ['trangChu'].concat(ME.quyen.thuchi ? ['thuChi'] : []), '#/cong-trinh': ['congTrinh'], '#/thu-chi': ['thuChi', 'congTrinh'], '#/cong-no': ['congNo'], '#/van-phong': ['vanPhong'],
-    '#/cho-duyet': ['choDuyet'], '#/danh-ba': ['danhBa'], '#/he-so': ['doiTac'], '#/ct': ['ctChiTiet'], '#/nguoi': ['nguoiChiTiet'], '#/bang-luong': ['bangLuong'], '#/viec': ['viec'], '#/tien-do': ['tienDo'], '#/hieu-suat': ['hieuSuat', 'tienDo'], '#/mau': ['mauQuyTrinh'], '#/he-thong': ['tinhTrang'] }[duong] || [];
+    '#/cho-duyet': ['choDuyet', 'congTrinh'], '#/danh-ba': ['danhBa'], '#/he-so': ['doiTac'], '#/ct': ['ctChiTiet'], '#/nguoi': ['nguoiChiTiet'], '#/bang-luong': ['bangLuong'], '#/viec': ['viec'], '#/tien-do': ['tienDo'], '#/hieu-suat': ['hieuSuat', 'tienDo'], '#/mau': ['mauQuyTrinh'], '#/he-thong': ['tinhTrang'] }[duong] || [];
   const qq = new URLSearchParams(tham || ''), p = duong === '#/ct' || duong === '#/nguoi' ? { ma: qq.get('ma') } : duong === '#/bang-luong' ? { thang: qq.get('thang') || homNay().slice(0, 7) } : {};
   await Promise.all(can.map(a => goi(a, p, true)));
 }
@@ -441,13 +448,13 @@ TRANG['#/cong-trinh'] = async nd => {
     `<div class="the"><div class="hang" style="margin-bottom:10px"><input id="timCT" placeholder="Tìm tên công trình, mối, chủ trì…" style="flex:3">
     <select id="locCT"><option value="">Tất cả trạng thái</option><option>Đang làm</option><option>Đã xong</option><option>Hủy</option><option value="toi">Của tôi</option><option value="app">Chỉ có trên app</option></select>
     <select id="locPL"><option value="">Tất cả phân loại</option><option value="td">Tạm dừng (${ds.filter(x => x.tam_dung).length})</option>${ME.quyen.hopdong ? `<option value="ktc">KTC làm, dấu KTC (${ds.filter(x => !x.dau).length})</option><option value="nhan">Người khác gửi dấu KTC (${ds.filter(x => x.dau && x.dau.kieu === 'nhan').length})</option><option value="gui">KTC gửi dấu công ty khác (${ds.filter(x => x.dau && x.dau.kieu === 'gui').length})</option>` : ''}</select></div>
-    <div class="cuon"><table class="bang co-the"><thead><tr><th>Ngày nhận</th><th>Công trình</th><th>Chủ trì</th>${ME.quyen.hopdong ? '<th>Mối</th>' : ''}${ME.quyen.hopdong ? '<th class="r">Giá trị nhận</th>' : ''}<th>Nhóm Zalo</th><th>Trạng thái</th></tr></thead><tbody id="dsCT"></tbody></table></div></div>` + (ME.vai === 'admin' ? `<details class="the" ontoggle="napCTXoa(this)"><summary style="cursor:pointer"><b>Công trình đã xóa khỏi app</b> <span class="nho">bấm để xem và khôi phục</span></summary><div id="ctXoaND" style="margin-top:8px"></div></details>` : '');
+    <div class="cuon"><table class="bang ds-ct"><thead><tr><th>Ngày nhận</th><th>Công trình</th><th>Chủ trì</th>${ME.quyen.hopdong ? '<th>Mối</th>' : ''}${ME.quyen.hopdong ? '<th class="r">Giá trị nhận</th>' : ''}<th>Nhóm Zalo</th><th>Trạng thái</th></tr></thead><tbody id="dsCT"></tbody></table></div></div>` + (ME.vai === 'admin' ? `<details class="the" ontoggle="napCTXoa(this)"><summary style="cursor:pointer"><b>Công trình đã xóa khỏi app</b> <span class="nho">bấm để xem và khôi phục</span></summary><div id="ctXoaND" style="margin-top:8px"></div></details>` : '');
   if ($('#ctNgay')) $('#ctNgay').valueAsDate = new Date();
   const ve = () => {
     const q = P_khong($('#timCT').value), l = $('#locCT').value, pl = $('#locPL').value;
     const hopPL = x => !pl || (pl === 'td' ? !!x.tam_dung : pl === 'ktc' ? !x.dau : !!x.dau && x.dau.kieu === pl);
     $('#dsCT').innerHTML = ds.filter(x => hopPL(x) && (!q || P_khong([x.ten, x.moi, x.chu_tri, ngay(x.ngay_nhan), x.dau ? x.dau.ben : ''].join(' ')).includes(q)) && (!l || (l === 'toi' ? x.cua_toi : l === 'app' ? x.nguon === 'App' : x.trang_thai === l)))
-      .map(x => `<tr style="cursor:pointer" onclick="location.hash='#/ct?ma=${x.ma}'"><td data-n="Ngày nhận" style="white-space:nowrap">${ngay(x.ngay_nhan) || '—'}</td><td data-n="Công trình"><b>${esc(x.ten)}</b>${x.thu_muc_id ? '' : ' <span class="tag t-xam">chưa có thư mục</span>'}${x.nguon === 'App' ? ' <span class="tag t-dang">chỉ có trên app</span>' : ''}${nhanPL(x)}</td><td data-n="Chủ trì">${esc(x.chu_tri || '')}</td>${ME.quyen.hopdong ? `<td data-n="Mối">${esc(x.moi || '')}</td>` : ''}${ME.quyen.hopdong ? `<td class="r" data-n="Giá trị nhận">${x.tien && x.tien.gt_nhan ? vnd(x.tien.gt_nhan) : ''}</td>` : ''}<td data-n="Nhóm Zalo">${x.zalo ? `<a class="tag t-xong" href="${esc(x.zalo)}" target="_blank" rel="noopener" onclick="moZalo(event,this.href)">Mở nhóm</a>` : ''}</td><td data-n="Trạng thái">${tag(x.trang_thai)}</td></tr>`).join('') || '<tr><td colspan="7" class="rong">Không có công trình phù hợp</td></tr>';
+      .map(x => `<tr style="cursor:pointer" onclick="location.hash='#/ct?ma=${x.ma}'"><td data-n="Ngày nhận" data-k="Nhận" style="white-space:nowrap">${ngay(x.ngay_nhan) || '—'}</td><td class="ten" data-n="Công trình"><b>${esc(x.ten)}</b>${x.thu_muc_id ? '' : ' <span class="tag t-xam">chưa có thư mục</span>'}${x.nguon === 'App' ? ' <span class="tag t-dang">chỉ có trên app</span>' : ''}${nhanPL(x)}</td><td data-n="Chủ trì" data-k="Chủ trì">${esc(x.chu_tri || '')}</td>${ME.quyen.hopdong ? `<td data-n="Mối" data-k="Mối">${esc(x.moi || '')}</td>` : ''}${ME.quyen.hopdong ? `<td class="r gt" data-n="Giá trị nhận">${x.tien && x.tien.gt_nhan ? vnd(x.tien.gt_nhan) : ''}</td>` : ''}<td data-n="Nhóm Zalo">${x.zalo ? `<a class="tag t-xong" href="${esc(x.zalo)}" target="_blank" rel="noopener" onclick="moZalo(event,this.href)">Mở nhóm</a>` : ''}</td><td class="tt" data-n="Trạng thái">${tag(x.trang_thai)}</td></tr>`).join('') || '<tr><td colspan="7" class="rong">Không có công trình phù hợp</td></tr>';
   };
   $('#timCT').oninput = ve; $('#locCT').onchange = ve; $('#locPL').onchange = ve; ve();
 };
@@ -597,47 +604,83 @@ async function luuVP() {
   const r = await ghi('themVanPhong', p, null); bao(r.trung ? 'Đã lưu – nghi trùng ' + r.trung : 'Đã lưu', 4000);
 }
 
-/* ---------- Chờ duyệt (0.7.1: mục "Tạo thư mục Drive", bấm duyệt là app tạo thư mục; 0.7.7: mục "Công trình mới" từ nhóm Zalo mới) ---------- */
-const MOC_TM = 'Tạo thư mục Drive', MOC_CTM = 'Công trình mới';
+/* ---------- Chờ duyệt (0.7.1: "Tạo thư mục Drive"; 0.7.7: "Công trình mới"; 0.7.8: xem Drive đã có thư mục chưa, "Lưu file Zalo") ---------- */
+const MOC_TM = 'Tạo thư mục Drive', MOC_CTM = 'Công trình mới', MOC_LF = 'Lưu file Zalo';
 TRANG['#/cho-duyet'] = async nd => {
-  const ds = (await goi('choDuyet')).filter(r => r['Trạng thái (chờ/duyệt/bỏ)'] === 'chờ'), sua = ME.quyen.choduyet > 1, soTM = ds.filter(r => r['Mốc tiến độ'] === MOC_TM).length,
-    soCTM = ds.filter(r => r['Mốc tiến độ'] === MOC_CTM).length, them = [soCTM ? `${soCTM} công trình mới` : '', soTM ? `${soTM} thư mục Drive cần tạo` : ''].filter(Boolean).join(', ');
-  nd.innerHTML = tieuDe('Chờ duyệt', `${ds.length} mục${them ? `, trong đó ${them}` : ''} · tiến độ lấy từ nhóm Zalo và trang web`) + (ds.map(r => {
+  const [tat, dsCT] = await Promise.all([goi('choDuyet'), goi('congTrinh')]);
+  const ds = tat.filter(r => r['Trạng thái (chờ/duyệt/bỏ)'] === 'chờ'), sua = ME.quyen.choduyet > 1, dem = m => ds.filter(r => r['Mốc tiến độ'] === m).length,
+    choLuu = tat.filter(r => r['Mốc tiến độ'] === MOC_LF && r['Trạng thái (chờ/duyệt/bỏ)'] === 'duyệt' && !String(r['Kết quả'] || '').trim()).length,
+    them = [dem(MOC_CTM) ? `${dem(MOC_CTM)} công trình mới` : '', dem(MOC_TM) ? `${dem(MOC_TM)} thư mục Drive cần tạo` : '', dem(MOC_LF) ? `${dem(MOC_LF)} file cần lưu` : ''].filter(Boolean).join(', ');
+  nd.innerHTML = tieuDe('Chờ duyệt', `${ds.length} mục${them ? `, trong đó ${them}` : ''} · tiến độ lấy từ nhóm Zalo và trang web`)
+    + (choLuu ? `<div class="the nho" id="choLuu">${choLuu} file anh đã duyệt đang chờ lượt đọc Zalo kế tiếp (21h hoặc 9h15) tải về, lưu vào thư mục công trình.</div>` : '') + (ds.map(r => {
     if (r['Mốc tiến độ'] === MOC_CTM) return theCTM(r, sua);
-    const tm = r['Mốc tiến độ'] === MOC_TM, ma = esc(r['Mã dòng']);
+    if (r['Mốc tiến độ'] === MOC_LF) return theLF(r, sua, dsCT || []);
+    const tm = r['Mốc tiến độ'] === MOC_TM, ma = esc(r['Mã dòng']), giaTri = tm && r._tm && r._tm.co ? r._tm.co.ten : r['Nội dung đề xuất'];
     return `<div class="the"><div class="nho"><span class="ma">${esc(r['Mã CT'])}</span> · ${tm ? `<span class="chip" style="background:var(--vangnhat);color:#7a5a00">${MOC_TM}</span>` : esc(r['Nguồn (Zalo/web)'])} · ${esc(r['Thời điểm gốc'])}</div>
-    <p style="border-left:3px solid var(--vang);padding-left:10px;color:var(--phu)">${esc(r['Trích dẫn gốc'])}</p>${tm ? '<label>Tên thư mục (sửa được trước khi duyệt; muốn tạo trong thư mục con thì thêm "Tùng/" ở đầu)</label>' : ''}<textarea id="nd_${ma}" rows="2">${esc(r['Nội dung đề xuất'])}</textarea>
-    ${sua ? `<p class="hang" style="margin:10px 0 0;justify-content:flex-end"><button class="nut phu" style="flex:none" onclick="duyet('${ma}','bỏ')">Bỏ</button><button class="nut" style="flex:none" onclick="duyet('${ma}','duyệt',${tm ? 1 : 0})">${tm ? 'Duyệt, tạo thư mục' : 'Duyệt'}</button></p>` : ''}</div>`;
+    <p style="border-left:3px solid var(--vang);padding-left:10px;color:var(--phu)">${esc(r['Trích dẫn gốc'])}</p>${tm ? '<label>Tên thư mục (sửa được trước khi duyệt; muốn tạo trong thư mục con thì thêm "Tùng/" ở đầu)</label>' : ''}<textarea id="nd_${ma}" rows="2">${esc(giaTri)}</textarea>${tm ? ghiTM(r, ma) : ''}
+    ${sua ? `<p class="hang" style="margin:10px 0 0;justify-content:flex-end"><button class="nut phu" style="flex:none" onclick="duyet('${ma}','bỏ')">Bỏ</button><button class="nut" style="flex:none" id="dy_${ma}" onclick="duyet('${ma}','duyệt',${tm ? 1 : 0})">${tm ? (r._tm && r._tm.co ? 'Duyệt, gắn thư mục có sẵn' : 'Duyệt, tạo thư mục') : 'Duyệt'}</button></p>` : ''}</div>`;
   }).join('') || '<div class="the rong">Không có mục nào chờ duyệt</div>');
 };
+/* 0.7.8: dòng báo Drive đã có thư mục chưa (máy xử lý tra Drive khi mở trang) */
+function ghiTM(r, ma) {
+  const t = r._tm;
+  if (!t) return '';
+  if (t.co) return `<p class="nho" id="tmg_${ma}" style="color:#1e6b3a;margin:6px 0 0">✓ Drive đã có thư mục <b>${esc(t.co.ten)}</b>${t.co.ma ? ` (đang gắn với ${esc(t.co.ma)}: có thể trùng công trình, anh xem lại)` : ''}. Duyệt thì app gắn thư mục này, không tạo mới.</p>`;
+  if (t.goi_y && t.goi_y.length) return `<div class="nho" id="tmg_${ma}" style="margin:6px 0 0">Drive chưa có thư mục đúng tên này. Có thư mục tên gần giống (bấm để dùng, không tạo mới):<br>${t.goi_y.map(g => `<button class="nut phu" style="flex:none;padding:4px 10px;margin:4px 6px 0 0;font-size:12px" data-t="${esc(g.ten)}" onclick="dungTM('${ma}',this.dataset.t)">${esc(g.ten)}</button>`).join('')}</div>`;
+  return `<p class="nho" id="tmg_${ma}" style="margin:6px 0 0">Drive chưa có thư mục này: duyệt thì app tạo mới.</p>`;
+}
+function dungTM(ma, ten) {
+  const o = $('#nd_' + ma); o.value = ten; o.dataset.tay = '1';
+  const g = $('#tmg_' + ma); if (g) g.innerHTML = `✓ Dùng thư mục có sẵn <b>${esc(ten)}</b>: duyệt thì app gắn thư mục này, không tạo mới.`;
+  const b = $('#dy_' + ma); if (b) b.textContent = b.textContent.replace('tạo thư mục', 'gắn thư mục có sẵn').replace('thêm công trình,', 'thêm vào danh sách,');
+}
 async function duyet(ma, tt, tm) {
-  const p = { ma, trang_thai: tt, noi_dung: $('#nd_' + ma).value };
-  if (tm === 2) Object.assign(p, { ten: $('#ten_' + ma).value.trim(), ngay_nhan: $('#ngay_' + ma).value, moi: $('#moi_' + ma).value.trim(), zalo: $('#zl_' + ma).value.trim() });
+  const v = id => { const o = $(id); return o ? o.value : undefined; };
+  const p = { ma, trang_thai: tt, noi_dung: v('#nd_' + ma) };
+  if (tm === 2) Object.assign(p, { ten: v('#ten_' + ma).trim(), ngay_nhan: v('#ngay_' + ma), moi: v('#moi_' + ma).trim(), zalo: v('#zl_' + ma).trim() });
+  if (tm === 3) Object.assign(p, { thu_muc: v('#lftm_' + ma), kiem_tra: !!($('#lfkt_' + ma) || {}).checked, ma_ct: v('#lfct_' + ma) });
   const r = await ghi('duyet', p, tm && tt === 'duyệt' ? null : (tt === 'duyệt' ? 'Đã duyệt' : 'Đã bỏ'));
-  if (r && r.ct_moi) bao(`Đã thêm công trình ${r.ma} và ${r.da_co ? 'gắn thư mục có sẵn' : 'tạo thư mục'}: ${r.thu_muc}`, 7000);
+  if (r && r.luu_file) bao(`Đã duyệt lưu file${r.kiem_tra ? ' và kiểm tra' : ''}. Lượt đọc Zalo kế tiếp (21h hoặc 9h15) tải về, lưu vào thư mục công trình${r.kiem_tra ? ', Claude kiểm tra rồi báo anh' : ''}.`, 7000);
+  else if (r && r.ct_moi) bao(`Đã thêm công trình ${r.ma} và ${r.da_co ? 'gắn thư mục có sẵn' : 'tạo thư mục'}: ${r.thu_muc}`, 7000);
   else if (r && r.gan_ct_cu) bao(`Đã có công trình cùng tên (${r.ma}): ${r.da_co ? 'gắn thư mục có sẵn' : 'tạo thư mục'} ${r.thu_muc}`, 7000);
   else if (r && r.thu_muc) bao((r.da_co ? 'Đã gắn thư mục có sẵn: ' : 'Đã tạo thư mục: ') + r.thu_muc, 6000);
 }
-/* 0.7.7: thẻ "Công trình mới": sửa tên, ngày nhận, mối thì tên thư mục đổi theo (giữ phần anh tự sửa) */
+/* 0.7.7: thẻ "Công trình mới": sửa tên, ngày nhận, mối thì tên thư mục đổi theo (giữ phần anh tự sửa); 0.7.8: Drive đã có thư mục thì gắn thư mục đó */
 function theCTM(r, sua) {
-  const ma = esc(r['Mã dòng']), ngay10 = String(r['Ngày nhận (đề xuất)'] || '').slice(0, 10), o = (id, v, them) => `<input id="${id}_${ma}" value="${esc(v || '')}" data-cu="${esc(v || '')}"${them || ''}>`;
+  const ma = esc(r['Mã dòng']), ngay10 = String(r['Ngày nhận (đề xuất)'] || '').slice(0, 10), o = (id, v, them) => `<input id="${id}_${ma}" value="${esc(v || '')}" data-cu="${esc(v || '')}"${them || ''}>`,
+    co = r._tm && r._tm.co, tmv = co ? co.ten : r['Nội dung đề xuất'];
   return `<div class="the" id="ctm_${ma}"><div class="nho"><span class="chip" style="background:#e7f5ec;color:#1e6b3a">${MOC_CTM}</span> · ${esc(r['Nguồn (Zalo/web)'])}${r['Nhóm Zalo'] ? ` · nhóm “${esc(r['Nhóm Zalo'])}”` : ''} · ${esc(r['Thời điểm gốc'])}</div>
     <p style="border-left:3px solid var(--vang);padding-left:10px;color:var(--phu);white-space:pre-line">${esc(r['Trích dẫn gốc'])}</p>
     <div class="hang"><div style="flex:2"><label>Tên công trình</label>${o('ten', r['Tên công trình (đề xuất)'], ` oninput="doiCTM('${ma}','ten')" maxlength="300"`)}</div>
       <div><label>Ngày nhận</label><input type="date" id="ngay_${ma}" value="${esc(ngay10)}" data-cu="${esc(ngay10)}" onchange="doiCTM('${ma}','ngay')"></div></div>
     <div class="hang"><div><label>Mối</label>${o('moi', r['Mối (đề xuất)'], ` oninput="doiCTM('${ma}','moi')" maxlength="100" placeholder="Người đưa việc"`)}</div>
       <div style="flex:2"><label>Link nhóm Zalo (nếu có)</label>${o('zl', r['Link nhóm Zalo'], ' placeholder="https://zalo.me/g/..."')}</div></div>
-    <label>Tên thư mục Drive (tự đổi theo ngày, tên, mối; sửa được; muốn tạo trong thư mục con thì thêm "Tùng/" ở đầu)</label>${o('nd', r['Nội dung đề xuất'])}
-    ${sua ? `<p class="hang" style="margin:10px 0 0;justify-content:flex-end"><button class="nut phu" style="flex:none" onclick="duyet('${ma}','bỏ')">Bỏ</button><button class="nut" style="flex:none" onclick="duyet('${ma}','duyệt',2)">Duyệt: thêm công trình, tạo thư mục</button></p>` : ''}</div>`;
+    <label>Tên thư mục Drive (${co ? 'đã có trên Drive' : 'tự đổi theo ngày, tên, mối; sửa được; muốn tạo trong thư mục con thì thêm "Tùng/" ở đầu'})</label><input id="nd_${ma}" value="${esc(tmv || '')}"${co ? ' data-tay="1"' : ''}>${ghiTM(r, ma)}
+    ${sua ? `<p class="hang" style="margin:10px 0 0;justify-content:flex-end"><button class="nut phu" style="flex:none" onclick="duyet('${ma}','bỏ')">Bỏ</button><button class="nut" style="flex:none" id="dy_${ma}" onclick="duyet('${ma}','duyệt',2)">${co ? 'Duyệt: thêm vào danh sách, gắn thư mục có sẵn' : 'Duyệt: thêm công trình, tạo thư mục'}</button></p>` : ''}</div>`;
 }
 function doiCTM(ma, truong) {
   const o = $(`#${truong}_${ma}`), tm = $('#nd_' + ma), cu = o.dataset.cu || '', moi = o.value.trim();
+  if (tm.dataset.tay === '1') { o.dataset.cu = moi; return; }   // đang dùng thư mục có sẵn: không đổi tên thư mục
   let v = tm.value;
   const m = /^((?:[^/]*\/)?)(\d{4}\.\d{1,2}\.\d{1,2}\.\s*)?(.*)$/.exec(v), truoc = m[1] + (m[2] || ''), than = m[3];
   if (truong === 'ngay' && /^\d{4}-\d{2}-\d{2}$/.test(moi)) { const [y, th, d] = moi.split('-'); v = m[1] + `${y}.${Number(th)}.${Number(d)}. ` + than; }
   else if (truong === 'moi') { v = cu && v.endsWith(' - ' + cu) ? v.slice(0, -(cu.length + 3)) : v; if (moi) v += ' - ' + moi; }
   else if (truong === 'ten' && cu && than.startsWith(cu)) v = truoc + moi + than.slice(cu.length);
   tm.value = v; o.dataset.cu = moi;
+}
+/* 0.7.8: thẻ "Lưu file Zalo": chọn công trình (nếu chưa có), thư mục con, có cho Claude kiểm tra không; app chỉ ghi duyệt, lượt đọc Zalo kế tiếp tải về và lưu */
+function theLF(r, sua, dsCT) {
+  const ma = esc(r['Mã dòng']), coCT = r['Mã CT'] && r._ct_ten;
+  const chonCT = coCT ? `<b>${esc(r['Mã CT'])}</b> · ${esc(r._ct_ten)}${r._ct_co_tm ? '' : ' <span style="color:#b42318">(chưa có thư mục Drive: duyệt tạo thư mục trước)</span>'}`
+    : `<select id="lfct_${ma}"><option value="">— chọn công trình —</option>${dsCT.filter(c => c.thu_muc_id && c.trang_thai !== 'Hủy').map(c => `<option value="${esc(c.ma)}">${esc(c.ma)} · ${esc(c.ten)}</option>`).join('')}</select>`;
+  return `<div class="the" id="lf_${ma}"><div class="nho"><span class="chip" style="background:#e6effb;color:#1d4f91">Lưu file</span> · ${esc(r['Người gửi'] || '')}${r['Nhóm Zalo'] ? ` · nhóm “${esc(r['Nhóm Zalo'])}”` : ' · tin riêng'} · ${esc(r['Thời điểm gốc'])}</div>
+    <p style="margin:8px 0 4px;font-weight:600;word-break:break-all">📎 ${esc(r['Tên file'] || '')}</p>
+    <p style="border-left:3px solid var(--vang);padding-left:10px;color:var(--phu);white-space:pre-line">${esc(r['Trích dẫn gốc'])}</p>
+    <label>Công trình</label><div>${chonCT}</div>
+    <label>Lưu vào thư mục con (trong thư mục công trình${r._ct_tm ? ' “' + esc(r._ct_tm) + '”' : ''}; để trống = ngay trong thư mục công trình)</label><input id="lftm_${ma}" value="${esc(r['Thư mục lưu'] || '')}" placeholder="vd 1. Văn bản">
+    <label style="display:flex;gap:8px;align-items:center;margin-top:10px;color:var(--chu)"><input type="checkbox" id="lfkt_${ma}"${String(r['Claude kiểm tra'] || '') === 'x' ? ' checked' : ''} style="width:auto"> Claude kiểm tra file rồi báo anh</label>
+    <p class="nho" style="margin:6px 0 0">App không lấy được file từ Zalo: anh duyệt thì lượt đọc Zalo kế tiếp (21h hoặc 9h15) tải về, lưu vào thư mục công trình, ghi vào tiến độ công trình.</p>
+    ${sua ? `<p class="hang" style="margin:10px 0 0;justify-content:flex-end"><button class="nut phu" style="flex:none" onclick="duyet('${ma}','bỏ')">Bỏ</button><button class="nut" style="flex:none" id="dy_${ma}" onclick="duyet('${ma}','duyệt',3)">Duyệt lưu file</button></p>` : ''}</div>`;
 }
 
 /* ---------- Danh bạ ---------- */
@@ -1557,7 +1600,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.7.7 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.7.8 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
