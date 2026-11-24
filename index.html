@@ -796,12 +796,13 @@ function nhanPL(x) {
   if (x.tam_dung) h += ' <span class="tag t-xam" title="' + esc(x.tam_dung) + '">tạm dừng</span>';
   if (x.dau && x.dau.kieu === 'nhan') h += ' <span class="tag" style="background:#efe7fb;color:#5b2da8">' + esc(x.dau.ben) + ' gửi dấu</span>';
   if (x.dau && x.dau.kieu === 'gui') h += ' <span class="tag" style="background:#e3f0ff;color:#1d5fa8">gửi dấu ' + esc(x.dau.ben) + '</span>';
+  if (x.dau_gc) h += ' <span class="tag t-xam" title="Ghi chú dấu: ' + esc(x.dau_gc) + '">✎ ' + esc(x.dau_gc.length > 28 ? x.dau_gc.slice(0, 26) + '…' : x.dau_gc) + '</span>';
   return h;
 }
 function khungPL(x) {
   const k = x.dau ? x.dau.kieu : '', td = String(x.tam_dung || '').split(' | ');
   return `<div class="the" id="thePL"><h3>Phân loại công trình</h3>
-    <p class="nho" style="margin:-6px 0 10px">Chỉ anh thấy và sửa được khung này. Nhãn phân loại hiện cạnh tên công trình trong danh sách. "KTC làm, gửi dấu công ty khác": người được phân công thấy công ty đứng dấu và thông tin của công ty đó (lấy ở trang Đối tác) để làm hồ sơ. "Người khác làm, gửi dấu KTC": chỉ quản trị và kế toán thấy.</p>
+    <p class="nho" style="margin:-6px 0 10px">Chỉ anh thấy và sửa được khung này. Nhãn phân loại hiện cạnh tên công trình trong danh sách. "KTC làm, gửi dấu công ty khác": người được phân công thấy công ty đứng dấu và thông tin của công ty đó (lấy ở trang Đối tác) để làm hồ sơ. "Người khác làm, gửi dấu KTC" và ô ghi chú dấu: chỉ quản trị và kế toán thấy.</p>
     <div class="hang"><div style="min-width:200px"><label>Tình trạng theo dõi</label><select id="plTD" onchange="doiPL()"><option value="">Đang theo dõi</option><option value="1" ${x.tam_dung ? 'selected' : ''}>Tạm dừng</option></select></div>
       <div id="plLyDoO" style="flex:2;min-width:200px" class="${x.tam_dung ? '' : 'an'}"><label>Lý do tạm dừng</label><input id="plLyDo" maxlength="200" value="${esc(td[2] || '')}" placeholder="Ví dụ: chờ chủ trương, sang năm làm"></div></div>
     ${x.tam_dung ? `<p class="nho" style="margin:6px 0 0">Tạm dừng từ ${esc(td[0] || '')}. Công trình tạm dừng không tính vào số đang làm và không nhắc mốc trễ.</p>` : ''}
@@ -810,6 +811,7 @@ function khungPL(x) {
         <option value="nhan" ${k === 'nhan' ? 'selected' : ''}>Người khác làm, gửi dấu KTC</option>
         <option value="gui" ${k === 'gui' ? 'selected' : ''}>KTC làm, gửi dấu công ty khác</option></select></div>
       <div id="plBenO" style="flex:2;min-width:200px" class="${k ? '' : 'an'}"><label id="plBenN">${k === 'gui' ? 'Tên công ty đứng dấu' : 'Tên người hoặc đơn vị gửi dấu'}</label><input id="plBen" list="dsDau" maxlength="80" value="${esc(x.dau ? x.dau.ben : '')}" placeholder="${k === 'gui' ? 'Ví dụ: Cty Condesco' : 'Ví dụ: anh Đạt'}"></div></div>
+    <div style="margin-top:10px"><label>Ghi chú dấu (anh tự ghi)</label><input id="plGC" maxlength="200" value="${esc(x.dau_gc || '')}" placeholder="Ví dụ: Giang nhận, người KTC làm, dấu KTC"></div>
     <div class="hang" style="margin-top:12px;align-items:center"><button class="nut" id="plLuu" style="flex:none" onclick="luuPL('${x.ma}')">Lưu phân loại</button>
       <span class="nho" id="plXem" style="flex:3">${nhanPL(x) || 'Chưa có nhãn nào.'}</span></div>
     <hr style="border:0;border-top:1px solid var(--vien);margin:14px 0 10px">
@@ -828,7 +830,7 @@ async function luuPL(ma) {
   if (k && !ben) { bao(k === 'gui' ? 'Điền tên công ty đứng dấu' : 'Điền tên người hoặc đơn vị gửi dấu'); $('#plBen').focus(); return; }
   const n = $('#plLuu'); n.disabled = true; bao('Đang lưu phân loại…', 30000);
   try {
-    await goi('phanLoaiCT', { ma, tam_dung: td, ly_do: td ? $('#plLyDo').value : '', dau_kieu: k, dau_ben: k ? ben : '' });
+    await goi('phanLoaiCT', { ma, tam_dung: td, ly_do: td ? $('#plLyDo').value : '', dau_kieu: k, dau_ben: k ? ben : '', dau_gc: $('#plGC').value.trim() });
     CACHE.ct = null; CACHE.ctDang = null;
     try { ['congTrinh', 'tienDo', 'trangChu'].forEach(a => localStorage.removeItem(khoaLuu(a))); } catch (e) {}
     bao('Đã lưu phân loại.', 4000);
@@ -1528,7 +1530,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.7.5 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.7.6 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };

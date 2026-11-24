@@ -1,5 +1,5 @@
 // KTC – chỉ lưu sẵn vỏ giao diện để mở nhanh; số liệu luôn lấy mới từ máy xử lý.
-const BAN = 'ktc-v0.7.5';
+const BAN = 'ktc-v0.7.6';
 const VO = ['./', 'index.html', 'manifest.webmanifest', 'logo.png', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(BAN).then(c => c.addAll(VO))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== BAN).map(k => caches.delete(k))))); self.clients.claim(); });
