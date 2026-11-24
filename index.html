@@ -138,6 +138,7 @@ a.canh{text-decoration:none}
   .kb{grid-auto-columns:82%}
   .hai>div{display:contents}.hai .uu{order:-1}.hai .cuoi{order:1}
 }
+.pc-vai{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px 14px;margin-top:10px}.pc-vai label{display:flex;gap:7px;align-items:center;font-size:13px;cursor:pointer;min-width:0}.pc-vai input{width:auto;flex:none;margin:0}.pc-vai label.da{color:var(--phu);cursor:default}.pc-vai span{overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -462,6 +463,7 @@ const P_khong = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').re
 TRANG['#/ct'] = async (nd, q) => {
   const ma = q.get('ma'), x = await goi('ctChiTiet', { ma }), adm = ME.vai === 'admin', sua = ME.quyen.congtrinh > 1;
   const dang = x.phan_cong.filter(p => !p.den);
+  PC_DANG = dang.map(p => [p.ma_nguoi, p.vai]);
   CACHE.ctDang = x;
   let h = `<p style="margin:0 0 8px"><a href="#/cong-trinh" class="nho">← Danh sách công trình</a></p>` +
     tieuDe(esc(x.ten), `Nhận ${ngay(x.ngay_nhan) || '—'} · Chủ trì ${esc(x.chu_tri || '—')}${ME.quyen.hopdong ? ' · Mối ' + esc(x.moi || '—') : ''}${x.nguon === 'App' || x.nguon === 'Zalo' ? ` · <span class="tag t-dang">chỉ có trên app${x.nguon === 'Zalo' ? ' (từ Zalo)' : ''}</span>` : ''}`,
@@ -478,8 +480,10 @@ TRANG['#/ct'] = async (nd, q) => {
   h += `<div class="the"><h3>File mới sửa</h3><div id="fileCT"><div class="rong nho">${x.thu_muc_id ? 'Đang tải…' : 'Chưa có thư mục Drive'}</div></div></div>`;
   h += '</div><div>';
   h += `<div class="the"><h3>Phân công</h3>${dang.map(p => `<div class="dong"><div style="display:flex;gap:10px;align-items:center">${av({ ten: p.ten, anh: p.anh }, 'width:32px;height:32px;font-size:12px')}<div><a href="#/nguoi?ma=${p.ma_nguoi}" style="text-decoration:none"><b>${esc(p.ten)}</b></a><div class="nho">${esc(p.vai)}${p.han ? ' · hạn ' + ngay(p.han) : ''}${p.xong ? ' · xong ' + ngay(p.xong) : ''}${p.cl ? ' · ' + '★'.repeat(+p.cl) : ''}</div></div></div>${adm ? `<div style="display:flex;gap:6px"><button class="nut phu" onclick="moDG('${x.ma}','${p.ma_nguoi}','${esc(p.vai)}','${p.han || ''}','${p.xong || ''}','${p.cl || ''}')">Đánh giá</button><button class="nut phu" onclick="goPC('${x.ma}','${p.ma_nguoi}','${esc(p.vai)}')">Gỡ</button></div>` : ''}</div>`).join('') || '<div class="rong nho">Chưa phân công</div>'}
-    ${adm ? `<div class="hang" style="margin-top:10px"><select id="pcNguoi"></select><select id="pcVai">${(ME.vai_pc || []).map(v => `<option>${v}</option>`).join('')}</select><input id="pcHan" type="date" title="Hạn hoàn thành (không bắt buộc)"><button class="nut" style="flex:none" onclick="themPC('${x.ma}')">Phân công</button></div>
-      <p class="nho" style="margin:8px 0 0">Giám sát, kế toán: chỉ xem thư mục. Vai khác: sửa được thư mục. Hạn và đánh giá dùng để chấm năng lực.</p>
+    ${adm ? `<div class="hang" style="margin-top:10px"><select id="pcNguoi" onchange="pcDanhDau()"></select><input id="pcHan" type="date" title="Hạn hoàn thành (không bắt buộc)"></div>
+      <div id="pcVai" class="pc-vai">${(ME.vai_pc || []).map(v => `<label><input type="checkbox" value="${esc(v)}"><span>${esc(v)}</span></label>`).join('')}</div>
+      <button class="nut" style="margin-top:10px" onclick="themPC('${x.ma}')">Phân công các việc đã tích</button>
+      <p class="nho" style="margin:8px 0 0">Chọn người, tích các việc rồi bấm Phân công (giao nhiều việc một lần; việc người đó đang giữ đã tích sẵn). Giám sát, kế toán: chỉ xem thư mục. Vai khác: sửa được thư mục. Hạn và đánh giá dùng để chấm năng lực.</p>
       <div id="dgForm" class="an" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--vien)"><b id="dgTen"></b><div class="hang"><div><label>Hạn</label><input id="dgHan" type="date"></div><div><label>Ngày xong</label><input id="dgXong" type="date"></div><div><label>Chất lượng</label><select id="dgCL"><option value="">Chưa chấm</option><option value="5">5 – Rất tốt</option><option value="4">4 – Tốt</option><option value="3">3 – Đạt</option><option value="2">2 – Phải sửa nhiều</option><option value="1">1 – Không đạt</option></select></div></div><label>Ghi chú</label><input id="dgGC"><p style="margin:10px 0 0"><button class="nut" id="dgLuu">Lưu đánh giá</button></p></div>` : ''}</div>`;
   if (sua) h += `<div class="the"><h3>Nhóm, cấp công trình</h3><p class="nho" style="margin:-6px 0 8px">Dùng để tính độ khó khi chấm năng lực.</p><div class="hang"><select id="ctNhom"><option value="">Nhóm dự án…</option>${['A', 'B', 'C'].map(v => `<option${x.nhom === v ? ' selected' : ''}>${v}</option>`).join('')}</select><select id="ctCap"><option value="">Cấp công trình…</option>${['Đặc biệt', 'I', 'II', 'III', 'IV'].map(v => `<option${x.cap === v ? ' selected' : ''}>${v}</option>`).join('')}</select><button class="nut" style="flex:none" onclick="luuCap('${x.ma}')">Lưu</button></div></div>`;
   else if (x.nhom || x.cap) h += `<div class="the nho">Nhóm ${esc(x.nhom || '—')} · Cấp ${esc(x.cap || '—')}</div>`;
@@ -494,7 +498,7 @@ TRANG['#/ct'] = async (nd, q) => {
   h += '</div></div>';
   nd.innerHTML = h;
   if (x.thu_muc_id) goi('fileCT', { ma }).then(fs => { const e = $('#fileCT'); if (e) e.innerHTML = fs.map(f => `<div class="dong" data-l="${esc(/^https:\/\//.test(f.link || '') ? f.link : '')}" onclick="if(this.dataset.l)window.open(this.dataset.l,'_blank','noopener')"><div class="chinh"><b>${f.thu_muc ? '📁 ' : ''}${esc(f.ten)}</b><div class="nho">${esc(f.nguoi)} · ${f.luc ? new Date(f.luc).toLocaleString('vi-VN') : ''}</div></div>${ic('mo', 'width:16px;height:16px;color:var(--phu)')}</div>`).join('') || '<div class="rong nho">Không có file</div>'; }).catch(e => { const el = $('#fileCT'); if (el) el.innerHTML = `<div class="rong nho">${esc(e.message)}</div>`; });
-  if (adm) { const db = CACHE.db || (CACHE.db = await goi('danhBa')); if ($('#pcNguoi')) $('#pcNguoi').innerHTML = db.filter(n => n.trang_thai !== 'Nghỉ').map(n => `<option value="${esc(n.ma)}">${esc(n.ten)}${n.vai_tro ? ' – ' + esc(n.vai_tro) : ''}</option>`).join(''); }
+  if (adm) { const db = CACHE.db || (CACHE.db = await goi('danhBa')); if ($('#pcNguoi')) { $('#pcNguoi').innerHTML = db.filter(n => n.trang_thai !== 'Nghỉ').map(n => `<option value="${esc(n.ma)}">${esc(n.ten)}${n.vai_tro ? ' – ' + esc(n.vai_tro) : ''}</option>`).join(''); pcDanhDau(); } }
 };
 function theTD(x) {
   return `<div class="the" id="theTD"><h3>Ghi chú tiến độ</h3>${x.tien_do ? `<p class="nho" style="margin-top:-4px">Ghi chú trong Excel: ${esc(x.tien_do)}</p>` : ''}
@@ -515,7 +519,18 @@ function themTD(ma) {
   });
 }
 function veTDMay() { if (CACHE.ctDang) thayThe('theTD', theTD(CACHE.ctDang)); luuMay(); }
-async function themPC(ma) { const r = await ghi('phanCong', { ma, ma_nguoi: $('#pcNguoi').value, vai: $('#pcVai').value, han: $('#pcHan').value }, null); bao(r.chia_se ? 'Đã phân công và chia sẻ thư mục' : 'Đã phân công (chưa có thư mục nên chưa chia sẻ)', 4000); }
+let PC_DANG = [];                                              // [mã người, vai] đang giữ ở công trình đang xem
+function pcDanhDau() {                                          // việc người đang chọn đã giữ: tích sẵn, khóa lại
+  const ng = $('#pcNguoi') && $('#pcNguoi').value;
+  document.querySelectorAll('#pcVai input').forEach(i => { const co = PC_DANG.some(d => d[0] === ng && d[1] === i.value); i.checked = co; i.disabled = co; i.parentElement.classList.toggle('da', co); i.parentElement.title = co ? 'Người này đang giữ việc này' : ''; });
+}
+async function themPC(ma) {
+  const vai = [...document.querySelectorAll('#pcVai input:checked:not(:disabled)')].map(i => i.value);
+  if (!vai.length) return bao('Tích ít nhất 1 việc để phân công', 3000);
+  const r = await ghi('phanCong', { ma, ma_nguoi: $('#pcNguoi').value, vai, han: $('#pcHan').value }, null);
+  const n = (r.them || vai).length;
+  bao(`Đã phân công ${n} việc` + (r.da_co && r.da_co.length ? ` (bỏ qua ${r.da_co.join(', ')}: đã giao)` : '') + (r.chia_se ? ', đã chia sẻ thư mục' : ' (chưa có thư mục nên chưa chia sẻ)'), 4500);
+}
 async function goPC(ma, mn, vai) { if (!confirm('Gỡ vai “' + vai + '”? Nếu người này không còn vai nào ở công trình, app gỡ luôn quyền thư mục do app cấp.')) return; await ghi('goPhanCong', { ma, ma_nguoi: mn, vai }, 'Đã gỡ'); }
 function moDG(ma, mn, vai, han, xong, cl) {
   const f = $('#dgForm'); f.classList.remove('an'); $('#dgTen').textContent = 'Đánh giá: ' + vai; $('#dgHan').value = han; $('#dgXong').value = xong; $('#dgCL').value = cl; $('#dgGC').value = '';
@@ -1601,7 +1616,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.7.10 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.7.12 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
