@@ -1362,12 +1362,26 @@ TRANG['#/mau'] = async nd => {
       <label>Đường dẫn Drive</label><input id="mqLink" placeholder="https://drive.google.com/…"><label>Ghi chú</label><input id="mqGC"><p style="margin:12px 0 0"><button class="nut" onclick="luuMQ()">Lưu</button></p></div>` : '') +
     '<div class="hai"><div>' + (Object.keys(nhom).map(n => `<div class="the"><h3>${esc(n)}</h3>${nhom[n].map(m => `<div class="dong"${m.link ? ` onclick="window.open('${esc(m.link)}','_blank','noopener')"` : ' style="cursor:default"'}><div class="chinh"><b style="font-weight:500">${esc(m.ten)}</b>${m.ghi_chu ? `<div class="nho">${esc(m.ghi_chu)}</div>` : ''}</div><span style="display:flex;gap:8px;align-items:center;flex:none">${m.link ? ic('mo', 'width:16px;height:16px;color:var(--phu)') : ''}${adm ? `<button class="nut phu" style="padding:4px 9px" onclick="event.stopPropagation();boMQ('${m.ma}')" aria-label="Bỏ mẫu này">✕</button>` : ''}</span></div>`).join('')}</div>`).join('') || '<div class="the rong">Chưa có mẫu nào</div>') +
     '<p class="nho">Mở được thư mục hay không tùy quyền Drive của từng người.</p></div><div>' +
-    Object.keys(d.moc).map((l, i) => `<div class="the"><h3><span>Bộ mốc: ${esc(l)}</span>${adm ? `<a class="nho" href="javascript:void 0" onclick="$('#mmF${i}').classList.toggle('an')">Sửa</a>` : ''}</h3><ol style="margin:0;padding-left:20px">${d.moc[l].map(m => `<li style="padding:2px 0">${esc(m)}</li>`).join('')}</ol>
-      ${adm ? `<div id="mmF${i}" class="an" style="margin-top:10px"><label>Mỗi dòng một mốc, theo thứ tự</label><textarea id="mmT${i}" rows="${d.moc[l].length + 1}">${esc(d.moc[l].join('\n'))}</textarea><p style="margin:8px 0 0"><button class="nut" onclick="luuMauMoc(${i})">Lưu bộ mốc</button> <span class="nho">Chỉ áp dụng cho công trình gắn mốc sau này.</span></p></div>` : ''}</div>`).join('') + '</div></div>';
+    Object.keys(d.moc).map((l, i) => `<div class="the"><h3><span>Bộ mốc: ${esc(l)}</span>${adm ? `<a class="nho" href="javascript:void 0" onclick="$('#mmF${i}').classList.toggle('an')">Sửa</a>` : ''}</h3>${adm ? `<p class="nho" style="margin:-6px 0 6px">${(d.dung || {})[l] ? `Đang dùng ở ${d.dung[l]} công trình` : 'Chưa công trình nào dùng'}</p>` : ''}<ol style="margin:0;padding-left:20px">${d.moc[l].map(m => `<li style="padding:2px 0">${esc(m)}</li>`).join('')}</ol>
+      ${adm ? `<div id="mmF${i}" class="an" style="margin-top:10px"><label>Tên bộ mốc</label><input id="mmN${i}" value="${esc(l)}"><label>Mỗi dòng một mốc, theo thứ tự</label><textarea id="mmT${i}" rows="${d.moc[l].length + 1}">${esc(d.moc[l].join('\n'))}</textarea><p style="margin:8px 0 0"><button class="nut" onclick="luuMauMoc(${i})">Lưu bộ mốc</button> <button class="nut phu" onclick="xoaMauMoc(${i})">Xóa bộ mốc</button></p><p class="nho" style="margin:6px 0 0">Mốc sửa ở đây chỉ áp dụng cho công trình gắn mốc sau này. Đổi tên thì đổi luôn tên bộ ở các công trình đang dùng. Xóa bộ thì công trình đang dùng vẫn giữ mốc của mình.</p></div>` : ''}</div>`).join('') +
+    (adm ? `<div class="the"><h3><span>Thêm bộ mốc</span><a class="nho" href="javascript:void 0" onclick="$('#mmMoi').classList.toggle('an')">Mở</a></h3><div id="mmMoi" class="an"><label>Tên bộ mốc</label><input id="mmMoiTen" placeholder="VD: Giám sát thi công"><label>Mỗi dòng một mốc, theo thứ tự</label><textarea id="mmMoiDS" rows="6"></textarea><p style="margin:8px 0 0"><button class="nut" onclick="themMauMoc()">Thêm bộ mốc</button></p></div></div>` : '') + '</div></div>';
 };
 function luuMQ() { const ten = $('#mqTen').value.trim(); if (!ten) return bao('Nhập tên mẫu'); ghiRoiTai('luuMauQT', { ten, nhom: $('#mqNhom').value.trim() || 'Khác', link: $('#mqLink').value.trim(), ghi_chu: $('#mqGC').value }, '', 'Đã thêm mẫu').catch(() => {}); }
 function boMQ(ma) { if (confirm('Bỏ mẫu này khỏi danh sách?')) ghiRoiTai('luuMauQT', { ma, bo: true }, '', 'Đã bỏ').catch(() => {}); }
-function luuMauMoc(i) { const l = Object.keys(CACHE.mau.moc)[i], ds = $('#mmT' + i).value.split('\n').map(s => s.trim()).filter(Boolean); if (!ds.length) return bao('Cần ít nhất 1 mốc'); ghiRoiTai('luuMauMoc', { loai: l, ds }, '', 'Đã lưu bộ mốc').catch(() => {}); }
+function luuMauMoc(i) {
+  const l = Object.keys(CACHE.mau.moc)[i], ten = ($('#mmN' + i) ? $('#mmN' + i).value : l).replace(/\s+/g, ' ').trim(), ds = $('#mmT' + i).value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!ten) return bao('Nhập tên bộ mốc'); if (!ds.length) return bao('Cần ít nhất 1 mốc');
+  ghiRoiTai('luuMauMoc', { loai: l, ten, ds }, '', null).then(r => bao(r && r.doi_ct ? `Đã lưu, đổi tên bộ ở ${r.doi_ct} công trình` : 'Đã lưu bộ mốc', 4000)).catch(() => {});
+}
+function xoaMauMoc(i) {
+  const l = Object.keys(CACHE.mau.moc)[i], n = (CACHE.mau.dung || {})[l] || 0;
+  if (confirm(`Xóa bộ mốc "${l}"?` + (n ? ` ${n} công trình đang dùng vẫn giữ nguyên mốc của mình.` : ''))) ghiRoiTai('luuMauMoc', { loai: l, xoa: true }, '', 'Đã xóa bộ mốc').catch(() => {});
+}
+function themMauMoc() {
+  const ten = $('#mmMoiTen').value.replace(/\s+/g, ' ').trim(), ds = $('#mmMoiDS').value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!ten) return bao('Nhập tên bộ mốc'); if (!ds.length) return bao('Cần ít nhất 1 mốc');
+  ghiRoiTai('luuMauMoc', { loai: '', ten, ds }, '', 'Đã thêm bộ mốc').catch(() => {});
+}
 
 /* ---------- trang Hệ thống: đo tải + kiến nghị nâng cấp ---------- */
 TRANG['#/he-thong'] = async nd => {
@@ -1395,7 +1409,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.7.1 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.7.2 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
