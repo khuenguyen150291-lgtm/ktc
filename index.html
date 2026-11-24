@@ -410,7 +410,7 @@ TRANG['#/'] = async nd => {
   if (tc) { const gan = tc.thu.map(x => ({ ...x, l: 'Thu' })).concat(tc.chi.map(x => ({ ...x, l: 'Chi' }))).filter(x => (x.ngay || '') <= homNay()).sort((a, b) => (b.ngay || '').localeCompare(a.ngay || '')).slice(0, 8);
     h += `<div class="the"><h3>Giao dịch gần đây<a class="nho" href="#/thu-chi">Xem tất cả →</a></h3>${gan.map(x => `<div class="dong" onclick="location.hash='#/thu-chi'"><div class="chinh"><b>${esc(x.noi_dung)}</b><div class="nho">${ngay(x.ngay)}${x.nguoi_chi ? ' · ' + esc(x.nguoi_chi) : ''}</div></div><b class="so" style="color:${x.l === 'Thu' ? 'var(--xanh)' : 'var(--chu)'}">${x.l === 'Thu' ? '+' : '−'}${vnd(x.tien)}</b></div>`).join('')}</div>`; }
   h += d3.trai + '</div><div>' + d3.phai;
-  if (d.cho_duyet != null) h += `<a class="kpi" href="#/cho-duyet" style="margin-bottom:16px"><div class="nhan">${ic('duyet', 'width:16px;height:16px')}Tiến độ chờ duyệt</div><div class="so">${d.cho_duyet}</div></a>`;
+  if (d.cho_duyet != null) h += `<a class="kpi" href="#/cho-duyet" style="margin-bottom:16px"><div class="nhan">${ic('duyet', 'width:16px;height:16px')}Chờ duyệt</div><div class="so">${d.cho_duyet}</div></a>`;
   h += `<div class="the"><h3>Hạn nộp 30 ngày tới</h3>${(d.han_nop || []).map(x => `<div class="dong"><span>${esc(x.loai)} ${esc(x.ky)}</span><span class="tag t-dang">${ngay(x.han)}</span></div>`).join('') || '<div class="rong nho">Chưa có hạn nộp nào</div>'}</div>`;
   h += `<div class="the"><h3>Công trình của tôi</h3>${d.cua_toi.map(x => `<div class="dong" onclick="location.hash='#/ct?ma=${x.ma}'"><div class="chinh"><div class="ma">Nhận ${ngay(x.ngay_nhan) || '—'}${x.vai ? ' · ' + esc(x.vai) : ''}</div><b>${esc(x.ten)}</b></div>${tag(x.trang_thai)}</div>`).join('') || '<div class="rong nho">Chưa được phân công công trình nào</div>'}</div>`;
   h += '</div></div>';
@@ -597,14 +597,21 @@ async function luuVP() {
   const r = await ghi('themVanPhong', p, null); bao(r.trung ? 'Đã lưu – nghi trùng ' + r.trung : 'Đã lưu', 4000);
 }
 
-/* ---------- Chờ duyệt ---------- */
+/* ---------- Chờ duyệt (0.7.1: mục "Tạo thư mục Drive", bấm duyệt là app tạo thư mục) ---------- */
+const MOC_TM = 'Tạo thư mục Drive';
 TRANG['#/cho-duyet'] = async nd => {
-  const ds = (await goi('choDuyet')).filter(r => r['Trạng thái (chờ/duyệt/bỏ)'] === 'chờ');
-  nd.innerHTML = tieuDe('Tiến độ chờ duyệt', `${ds.length} mục lấy từ nhóm Zalo và trang web`) + (ds.map(r => `<div class="the"><div class="nho"><span class="ma">${esc(r['Mã CT'])}</span> · ${esc(r['Nguồn (Zalo/web)'])} · ${esc(r['Thời điểm gốc'])}</div>
-    <p style="border-left:3px solid var(--vang);padding-left:10px;color:var(--phu)">${esc(r['Trích dẫn gốc'])}</p><textarea id="nd_${r['Mã dòng']}" rows="2">${esc(r['Nội dung đề xuất'])}</textarea>
-    ${ME.quyen.choduyet > 1 ? `<p class="hang" style="margin:10px 0 0;justify-content:flex-end"><button class="nut phu" style="flex:none" onclick="duyet('${r['Mã dòng']}','bỏ')">Bỏ</button><button class="nut" style="flex:none" onclick="duyet('${r['Mã dòng']}','duyệt')">Duyệt</button></p>` : ''}</div>`).join('') || '<div class="the rong">Không có mục nào chờ duyệt</div>');
+  const ds = (await goi('choDuyet')).filter(r => r['Trạng thái (chờ/duyệt/bỏ)'] === 'chờ'), sua = ME.quyen.choduyet > 1, soTM = ds.filter(r => r['Mốc tiến độ'] === MOC_TM).length;
+  nd.innerHTML = tieuDe('Chờ duyệt', `${ds.length} mục${soTM ? `, trong đó ${soTM} thư mục Drive cần tạo` : ''} · tiến độ lấy từ nhóm Zalo và trang web`) + (ds.map(r => {
+    const tm = r['Mốc tiến độ'] === MOC_TM, ma = esc(r['Mã dòng']);
+    return `<div class="the"><div class="nho"><span class="ma">${esc(r['Mã CT'])}</span> · ${tm ? `<span class="chip" style="background:var(--vangnhat);color:#7a5a00">${MOC_TM}</span>` : esc(r['Nguồn (Zalo/web)'])} · ${esc(r['Thời điểm gốc'])}</div>
+    <p style="border-left:3px solid var(--vang);padding-left:10px;color:var(--phu)">${esc(r['Trích dẫn gốc'])}</p>${tm ? '<label>Tên thư mục (sửa được trước khi duyệt; muốn tạo trong thư mục con thì thêm "Tùng/" ở đầu)</label>' : ''}<textarea id="nd_${ma}" rows="2">${esc(r['Nội dung đề xuất'])}</textarea>
+    ${sua ? `<p class="hang" style="margin:10px 0 0;justify-content:flex-end"><button class="nut phu" style="flex:none" onclick="duyet('${ma}','bỏ')">Bỏ</button><button class="nut" style="flex:none" onclick="duyet('${ma}','duyệt',${tm ? 1 : 0})">${tm ? 'Duyệt, tạo thư mục' : 'Duyệt'}</button></p>` : ''}</div>`;
+  }).join('') || '<div class="the rong">Không có mục nào chờ duyệt</div>');
 };
-async function duyet(ma, tt) { await ghi('duyet', { ma, trang_thai: tt, noi_dung: $('#nd_' + ma).value }, tt === 'duyệt' ? 'Đã duyệt' : 'Đã bỏ'); }
+async function duyet(ma, tt, tm) {
+  const r = await ghi('duyet', { ma, trang_thai: tt, noi_dung: $('#nd_' + ma).value }, tm && tt === 'duyệt' ? null : (tt === 'duyệt' ? 'Đã duyệt' : 'Đã bỏ'));
+  if (r && r.thu_muc) bao((r.da_co ? 'Đã gắn thư mục có sẵn: ' : 'Đã tạo thư mục: ') + r.thu_muc, 6000);
+}
 
 /* ---------- Danh bạ ---------- */
 const diem = v => v == null ? '—' : v + '%';
@@ -1388,7 +1395,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.7.0 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.7.1 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
