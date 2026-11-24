@@ -569,7 +569,8 @@ TRANG['#/cong-no'] = async nd => {
 /* ---------- Văn phòng ---------- */
 function bangQuy(q) {
   const ds = (q.dong || []).slice().sort((a, b) => (b.ngay || '').localeCompare(a.ngay || ''));
-  return `<div class="cuon"><table class="bang co-the"><thead><tr><th>Ngày</th><th>Khoản</th><th>Loại</th><th>Người nhập</th><th class="r">Số tiền</th></tr></thead><tbody>${ds.map(x => `<tr><td data-n="Ngày" style="white-space:nowrap">${ngay(x.ngay)}</td><td data-n="Khoản">${esc(x.noi_dung)}${x.trung ? ' <span class="tag t-huy">nghi trùng</span>' : ''}</td><td data-n="Loại">${x.loai === 'cấp quỹ' ? '<span class="tag t-xong">cấp quỹ</span>' : '<span class="tag t-xam">chi</span>'}</td><td data-n="Người nhập">${esc(String(x.nguoi_nhap || '').split('@')[0])}</td><td class="r" data-n="Số tiền" style="color:${x.loai === 'cấp quỹ' ? 'var(--xanh)' : 'var(--chu)'}">${x.loai === 'cấp quỹ' ? '+' : '−'}${vnd(x.tien)}</td></tr>`).join('') || '<tr><td colspan="5" class="rong">Chưa có khoản nào</td></tr>'}</tbody></table></div>`;
+  const nguon = q.nguon ? `<p class="nho" style="margin:0 0 8px">Gồm các khoản Thư ghi trên Google Sheet "${esc(q.nguon.ten)}": app chỉ đọc, Thư sửa sheet thì khoảng 5 phút sau app mới thấy.${q.nguon.url ? ` <a href="${esc(q.nguon.url)}" target="_blank" rel="noopener">Mở sheet</a>` : ''}</p>${(q.nguon.canh_bao || []).map(c => `<div class="nho" style="color:var(--cam);margin:0 0 4px">⚠ ${esc(c)}</div>`).join('')}` : '';
+  return nguon + `<div class="cuon"><table class="bang co-the"><thead><tr><th>Ngày</th><th>Khoản</th><th>Loại</th><th>Người nhập</th><th class="r">Số tiền</th></tr></thead><tbody>${ds.map(x => `<tr><td data-n="Ngày" style="white-space:nowrap">${x.ngay ? ngay(x.ngay) : '<span class="tag t-vang">chưa ghi ngày</span>'}</td><td data-n="Khoản">${esc(x.noi_dung)}${x.trung ? ' <span class="tag t-huy">nghi trùng</span>' : ''}</td><td data-n="Loại">${x.loai === 'cấp quỹ' ? '<span class="tag t-xong">cấp quỹ</span>' : '<span class="tag t-xam">chi</span>'}</td><td data-n="Người nhập">${esc(String(x.nguoi_nhap || '').split('@')[0])}</td><td class="r" data-n="Số tiền" style="color:${x.loai === 'cấp quỹ' ? 'var(--xanh)' : 'var(--chu)'}">${x.loai === 'cấp quỹ' ? '+' : '−'}${vnd(x.tien)}</td></tr>`).join('') || '<tr><td colspan="5" class="rong">Chưa có khoản nào</td></tr>'}</tbody></table></div>`;
 }
 function formVP() {
   const chonLoai = ME.vai === 'admin' || ME.ma === 'NV03', chonNguoi = ME.vai !== 'duan';
@@ -1600,7 +1601,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.7.8 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.7.10 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
