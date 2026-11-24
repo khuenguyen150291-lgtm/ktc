@@ -1219,38 +1219,59 @@ function duBaoChu(db) {
   return s;
 }
 function theMoc(x) {
-  const adm = ME.quyen.congtrinh > 1, chon = ds => `<select id="mocLoai" style="max-width:260px">${ds.map(l => `<option>${esc(l)}</option>`).join('')}</select>`;
-  if (!x.moc.length) return `<div class="the" id="theMoc"><h3>Mốc giai đoạn</h3>${adm ? `<p class="nho" style="margin:-6px 0 10px">Chọn bộ mốc cho công trình này. Tên các mốc sửa ở mục Mẫu & quy trình.</p><div class="hang">${chon(x.cac_loai_moc)}<button class="nut" onclick="ganMoc('${x.ma}',false)">Gắn mốc</button></div>` : '<div class="rong nho">Chưa gắn mốc giai đoạn</div>'}</div>`;
-  const l = lopMoc(x.moc);
-  return `<div class="the" id="theMoc"><h3><span>Mốc giai đoạn <span class="chip">${esc(x.loai_moc)}</span></span>${adm ? `<a class="nho" href="javascript:void 0" onclick="$('#mocDatLai').classList.toggle('an')">Đặt lại mốc</a>` : ''}</h3>
-    ${mocThanh(x.moc)}<div class="nho" style="margin-bottom:8px">${duBaoChu(x.du_bao)}</div>
-    ${adm ? `<div id="mocDatLai" class="an hang" style="margin-bottom:10px">${chon(x.cac_loai_moc)}<button class="nut phu" onclick="ganMoc('${x.ma}',true)">Đổi sang bộ mốc này</button></div>` : ''}
-    ${x.moc.map((m, i) => `<div class="dong"${x.sua_moc ? ` onclick="moMoc('${x.ma}',${m.thu_tu})"` : ' style="cursor:default"'}><div style="display:flex;gap:10px;align-items:center;min-width:0"><span class="sott ${l[i]}">${m.xong ? '✓' : m.thu_tu}</span><div class="chinh"><b>${esc(m.moc)}</b>${m.ghi_chu ? `<div class="nho">${esc(m.ghi_chu)}</div>` : ''}</div></div>
-      <span style="display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">${m.xong ? (/^Suy ra/.test(m.ghi_chu) ? '<span class="tag t-xam">đã qua (suy ra)</span>' : `<span class="tag t-xong">xong ${ngayNgan(m.xong)}</span>`) : ''}${m.han ? `<span class="tag ${!m.xong && l[i] === 't' ? 't-huy' : 't-xam'}">hạn ${ngayNgan(m.han)}</span>` : (m.xong ? '' : l[i] === 'q' ? '<span class="nho">chưa có căn cứ</span>' : '<span class="nho">chưa có hạn</span>')}</span></div>`).join('')}
-    <p class="nho" style="margin:8px 0 0">${x.sua_moc ? 'Bấm vào một mốc để ghi ngày xong' + (adm ? ', đặt hạn.' : '.') : ''} Dự báo: ${esc(x.du_bao && x.du_bao.cach || '')}</p></div>`;
+  const adm = ME.quyen.congtrinh > 1, bos = x.bo_moc || [], co = new Set(bos.map(b => b.loai)), conLai = (x.cac_loai_moc || []).filter(l => !co.has(l));
+  const chon = (id, ds) => `<select id="${id}" style="max-width:260px">${ds.map(l => `<option>${esc(l)}</option>`).join('')}</select>`;
+  const them = adm && conLai.length ? `<div class="hang" style="margin-top:${bos.length ? 14 : 0}px;align-items:flex-end">${chon('mocLoai', conLai)}<input id="mocDau" placeholder="Dấu: để trống là KTC, hoặc tên công ty" style="max-width:260px"><button class="nut${bos.length ? ' phu' : ''}" style="flex:none" onclick="ganMoc('${x.ma}')">${bos.length ? '+ Thêm bộ mốc' : 'Gắn mốc'}</button></div>` : '';
+  if (!bos.length) return `<div class="the" id="theMoc"><h3>Mốc giai đoạn</h3>${adm ? `<p class="nho" style="margin:-6px 0 10px">Chọn bộ mốc cho công trình này. Một công trình gắn được nhiều bộ, mỗi bộ ghi dấu KTC hay dấu công ty khác. Tên các mốc sửa ở mục Mẫu & quy trình.</p>${them}` : '<div class="rong nho">Chưa gắn mốc giai đoạn</div>'}</div>`;
+  return `<div class="the" id="theMoc"><h3><span>Mốc giai đoạn${bos.length > 1 ? ` <span class="chip">${bos.length} bộ</span>` : ''}</span></h3>` + bos.map((b, bi) => {
+    const l = lopMoc(b.moc);
+    return `<div class="bomoc"${bi ? ' style="border-top:1px solid #eaecf0;margin-top:14px;padding-top:14px"' : ''}><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><b style="font-weight:600">${esc(b.loai)}</b><span class="tag ${b.dau ? 't-vang' : 't-xam'}">${b.dau ? 'dấu ' + esc(b.dau) : 'dấu KTC'}</span></span>${adm ? `<a class="nho" href="javascript:void 0" onclick="$('#mocSua${bi}').classList.toggle('an')">Sửa bộ</a>` : ''}</div>
+      ${adm ? `<div id="mocSua${bi}" class="an" style="margin:10px 0"><div class="hang" style="align-items:flex-end"><div><label>Dấu (để trống là KTC)</label><input id="mocDau${bi}" value="${esc(b.dau)}" placeholder="Tên công ty"></div><button class="nut phu" style="flex:none" onclick="suaDauBo('${x.ma}',${bi})">Lưu dấu</button></div>
+        ${conLai.length ? `<div class="hang" style="margin-top:8px">${chon('mocDoi' + bi, conLai)}<button class="nut phu" style="flex:none" onclick="doiBo('${x.ma}',${bi})">Đổi sang bộ này</button></div>` : ''}
+        <p style="margin:8px 0 0"><button class="nut phu" onclick="goBo('${x.ma}',${bi})">Gỡ bộ mốc này</button></p></div>` : ''}
+      ${mocThanh(b.moc)}<div class="nho" style="margin-bottom:8px">${duBaoChu(b.du_bao)}</div>
+      ${b.moc.map((m, i) => `<div class="dong"${x.sua_moc ? ` onclick="moMoc('${x.ma}',${bi},${m.thu_tu})"` : ' style="cursor:default"'}><div style="display:flex;gap:10px;align-items:center;min-width:0"><span class="sott ${l[i]}">${m.xong ? '✓' : m.thu_tu}</span><div class="chinh"><b>${esc(m.moc)}</b>${m.ghi_chu ? `<div class="nho">${esc(m.ghi_chu)}</div>` : ''}</div></div>
+      <span style="display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">${m.xong ? (/^Suy ra/.test(m.ghi_chu) ? '<span class="tag t-xam">đã qua (suy ra)</span>' : `<span class="tag t-xong">xong ${ngayNgan(m.xong)}</span>`) : ''}${m.han ? `<span class="tag ${!m.xong && l[i] === 't' ? 't-huy' : 't-xam'}">hạn ${ngayNgan(m.han)}</span>` : (m.xong ? '' : l[i] === 'q' ? '<span class="nho">chưa có căn cứ</span>' : '<span class="nho">chưa có hạn</span>')}</span></div>`).join('')}</div>`;
+  }).join('') + them + `<p class="nho" style="margin:8px 0 0">${x.sua_moc ? 'Bấm vào một mốc để ghi ngày xong' + (adm ? ', đặt hạn.' : '.') : ''}${bos[0].du_bao && bos[0].du_bao.cach ? ' Dự báo: ' + esc(bos[0].du_bao.cach) : ''}</p></div>`;
 }
-function ganMoc(ma, datLai) {
+function ganMoc(ma) {
   const loai = $('#mocLoai').value; if (!loai) return;
-  if (datLai && !confirm('Đổi sang bộ mốc “' + loai + '”? Các mốc cũ được giữ trong bảng dữ liệu nhưng không còn hiện.')) return;
-  ghiRoiTai('ganMoc', { ma, loai, dat_lai: datLai }, '', 'Đã gắn bộ mốc ' + loai).catch(() => {});
+  const dau = ($('#mocDau').value || '').trim();
+  ghiRoiTai('ganMoc', { ma, loai, dau }, '', 'Đã gắn bộ mốc ' + loai + (dau ? ' (dấu ' + dau + ')' : '')).catch(() => {});
 }
-function moMoc(ma, tt) {
-  const x = CACHE.ctDang; if (!x) return; const m = x.moc.find(k => k.thu_tu === tt), adm = ME.quyen.congtrinh > 1;
-  moHop(dauHop(esc(m.moc)) + `<div class="hang">${adm ? `<div><label>Hạn</label><input id="mmHan" type="date" value="${m.han || ''}"></div>` : `<div><label>Hạn</label><div style="padding:9px 0">${ngay(m.han) || 'chưa có'}</div></div>`}<div><label>Ngày xong</label><input id="mmXong" type="date" value="${m.xong || ''}"></div></div>
+function doiBo(ma, bi) {
+  const b = CACHE.ctDang.bo_moc[bi], loai = $('#mocDoi' + bi).value; if (!b || !loai) return;
+  if (!confirm('Đổi bộ “' + b.loai + '” sang “' + loai + '”? Các mốc cũ của bộ này được giữ trong bảng dữ liệu nhưng không còn hiện.')) return;
+  ghiRoiTai('ganMoc', { ma, loai, thay: b.loai }, '', 'Đã đổi sang bộ mốc ' + loai).catch(() => {});
+}
+function goBo(ma, bi) {
+  const b = CACHE.ctDang.bo_moc[bi]; if (!b) return;
+  if (!confirm('Gỡ bộ mốc “' + b.loai + '” khỏi công trình? Các mốc được giữ trong bảng dữ liệu nhưng không còn hiện.')) return;
+  ghiRoiTai('suaBoMoc', { ma, loai: b.loai, go: true }, '', 'Đã gỡ bộ mốc').catch(() => {});
+}
+function suaDauBo(ma, bi) {
+  const b = CACHE.ctDang.bo_moc[bi]; if (!b) return;
+  ghiRoiTai('suaBoMoc', { ma, loai: b.loai, dau: ($('#mocDau' + bi).value || '').trim() }, '', 'Đã lưu dấu').catch(() => {});
+}
+function moMoc(ma, bi, tt) {
+  const x = CACHE.ctDang; if (!x) return; const b = x.bo_moc[bi], m = b && b.moc.find(k => k.thu_tu === tt), adm = ME.quyen.congtrinh > 1; if (!m) return;
+  moHop(dauHop(esc(m.moc) + (x.bo_moc.length > 1 ? ' · ' + esc(b.loai) : '')) + `<div class="hang">${adm ? `<div><label>Hạn</label><input id="mmHan" type="date" value="${m.han || ''}"></div>` : `<div><label>Hạn</label><div style="padding:9px 0">${ngay(m.han) || 'chưa có'}</div></div>`}<div><label>Ngày xong</label><input id="mmXong" type="date" value="${m.xong || ''}"></div></div>
     <label>Ghi chú</label><input id="mmGC" value="${esc(m.ghi_chu)}">
-    <p style="margin:14px 0 0;display:flex;gap:8px;flex-wrap:wrap">${m.xong ? '' : `<button class="nut vang" onclick="$('#mmXong').value=homNay();luuMoc('${ma}',${tt})">Xong hôm nay</button>`}<button class="nut" onclick="luuMoc('${ma}',${tt})">Lưu</button><button class="nut phu" onclick="dongHop()">Thôi</button></p>
+    <p style="margin:14px 0 0;display:flex;gap:8px;flex-wrap:wrap">${m.xong ? '' : `<button class="nut vang" onclick="$('#mmXong').value=homNay();luuMoc('${ma}',${bi},${tt})">Xong hôm nay</button>`}<button class="nut" onclick="luuMoc('${ma}',${bi},${tt})">Lưu</button><button class="nut phu" onclick="dongHop()">Thôi</button></p>
     <p class="nho" style="margin:10px 0 0">Bỏ trống “Ngày xong” để mở lại mốc.</p>`);
 }
-function luuMoc(ma, tt) {
+function luuMoc(ma, bi, tt) {
+  const x = CACHE.ctDang, b = x && x.ma === ma ? x.bo_moc[bi] : null;
   const p = { ma, thu_tu: tt, xong: $('#mmXong').value, ghi_chu: $('#mmGC').value };
+  if (b) p.loai = b.loai;
   if ($('#mmHan')) p.han = $('#mmHan').value;
   dongHop();
-  const x = CACHE.ctDang, m = x && x.ma === ma && $('#theMoc') ? x.moc.find(k => k.thu_tu === tt) : null;
+  const m = b && $('#theMoc') ? b.moc.find(k => k.thu_tu === tt) : null;
   if (!m) return void ghiRoiTai('luuMoc', p, '', 'Đã lưu mốc').catch(() => {});
-  const cu = JSON.stringify([m, x.du_bao]);
+  const cu = JSON.stringify([m, b.du_bao]);
   m.xong = p.xong || ''; m.ghi_chu = p.ghi_chu || ''; if ('han' in p) m.han = p.han || '';
-  x.du_bao = duBaoTam(x.moc); veMocMay();                        // dòng dự báo do máy xử lý tính: lưu xong mới có số mới
-  ghiNen('luuMoc', p, () => { const o = JSON.parse(cu); Object.keys(m).forEach(k => { delete m[k]; }); Object.assign(m, o[0]); x.du_bao = o[1]; veMocMay(); });
+  b.du_bao = duBaoTam(b.moc); veMocMay();                        // dòng dự báo do máy xử lý tính: lưu xong mới có số mới
+  ghiNen('luuMoc', p, () => { const o = JSON.parse(cu); Object.keys(m).forEach(k => { delete m[k]; }); Object.assign(m, o[0]); b.du_bao = o[1]; veMocMay(); });
 }
 const duBaoTam = moc => { let cuoi = -1; moc.forEach((m, i) => { if (m.xong) cuoi = i; }); const xong = moc.filter(m => m.xong).length, sau = moc.slice(cuoi + 1); return { tong: moc.length, xong, hien_tai: sau.length ? sau[0].moc : '', bo_qua: moc.length - xong - sau.length, du_bao: null, lech: null, cach: '', tam: true }; };
 function veMocMay() { if (CACHE.ctDang) thayThe('theMoc', theMoc(CACHE.ctDang)); luuMay(); }
@@ -1313,15 +1334,16 @@ function trangChuDot3(d) {
 let TDLOC = '';
 TRANG['#/tien-do'] = async nd => {
   const d = CACHE.td = await goi('tienDo'), adm = ME.quyen.congtrinh > 1;
-  const co = d.ct.filter(c => c.moc.length), chua = d.ct.filter(c => !c.moc.length), laTre = c => (c.du_bao && c.du_bao.lech > 0) || lopMoc(c.moc).includes('t');
+  const co = d.ct.filter(c => (c.bo || []).length), chua = d.ct.filter(c => !(c.bo || []).length), treBo = b => (b.du_bao && b.du_bao.lech > 0) || lopMoc(b.moc).includes('t'), laTre = c => c.bo.some(treBo);
+  const lechMax = c => Math.max(0, ...c.bo.map(b => (b.du_bao && b.du_bao.lech) || 0)), tyLe = c => Math.min(...c.bo.map(b => b.du_bao ? b.du_bao.xong / b.du_bao.tong : 0));
   nd.innerHTML = tieuDe('Tiến độ công trình', `${d.ct.length} công trình đang làm · ${co.length} đã gắn mốc · ${co.filter(laTre).length} đang trễ mốc`) +
     `<div class="tab" id="tdTab" style="margin-bottom:14px"><button data-t="">Tất cả</button><button data-t="tre">Đang trễ</button><button data-t="toi">Của tôi</button></div><div id="tdDS"></div>` +
     (chua.length ? `<div class="the"><h3>Chưa gắn mốc <span class="chip">${chua.length}</span></h3><p class="nho" style="margin:-6px 0 8px">${adm ? 'Chọn bộ mốc cho từng công trình, hoặc gắn một bộ cho tất cả rồi đổi lại những công trình khác loại.' : 'Anh Khuê gắn bộ mốc cho từng công trình.'}</p>${adm ? `<div class="hang" style="margin-bottom:8px"><select id="tdLoaiAll" style="max-width:260px">${d.loai.map(l => `<option>${esc(l)}</option>`).join('')}</select><button class="nut phu" onclick="ganTatCa()">Gắn cho cả ${chua.length} công trình này</button></div>` : ''}${chua.map(c => `<div class="dong" style="cursor:default"><a href="#/ct?ma=${c.ma}" style="text-decoration:none;min-width:0"><b style="font-weight:500">${esc(c.ten)}</b></a>${adm ? `<select style="width:auto;flex:none" onchange="if(this.value)ghiRoiTai('ganMoc',{ma:'${c.ma}',loai:this.value},'','Đã gắn mốc').catch(()=>{})"><option value="">Gắn mốc…</option>${d.loai.map(l => `<option>${esc(l)}</option>`).join('')}</select>` : ''}</div>`).join('')}</div>` : '');
   const ve = () => {
     document.querySelectorAll('#tdTab button').forEach(b => b.classList.toggle('on', b.dataset.t === TDLOC));
-    const ds = co.filter(c => TDLOC === 'tre' ? laTre(c) : TDLOC === 'toi' ? c.cua_toi : true).sort((a, b) => ((b.du_bao.lech || 0) - (a.du_bao.lech || 0)) || (a.du_bao.xong / a.du_bao.tong - b.du_bao.xong / b.du_bao.tong));
-    $('#tdDS').innerHTML = ds.map(c => `<a class="the" href="#/ct?ma=${c.ma}" style="display:block;text-decoration:none"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0"><b>${esc(c.ten)}</b><div class="nho">Nhận ${ngay(c.ngay_nhan) || '—'}${c.chu_tri ? ' · chủ trì ' + esc(c.chu_tri) : ''} · ${esc(c.loai)}</div></div>
-      <span style="flex:none;display:flex;gap:6px">${c.viec.tre ? `<span class="tag t-huy">${c.viec.tre} việc trễ</span>` : ''}${c.viec.mo ? `<span class="tag t-xam">${c.viec.mo} việc mở</span>` : ''}</span></div>${mocThanh(c.moc)}<div class="nho">${duBaoChu(c.du_bao)}</div></a>`).join('') ||
+    const ds = co.filter(c => TDLOC === 'tre' ? laTre(c) : TDLOC === 'toi' ? c.cua_toi : true).sort((a, b) => (lechMax(b) - lechMax(a)) || (tyLe(a) - tyLe(b)));
+    $('#tdDS').innerHTML = ds.map(c => `<a class="the" href="#/ct?ma=${c.ma}" style="display:block;text-decoration:none"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0"><b>${esc(c.ten)}</b><div class="nho">Nhận ${ngay(c.ngay_nhan) || '—'}${c.chu_tri ? ' · chủ trì ' + esc(c.chu_tri) : ''} </div></div>
+      <span style="flex:none;display:flex;gap:6px">${c.viec.tre ? `<span class="tag t-huy">${c.viec.tre} việc trễ</span>` : ''}${c.viec.mo ? `<span class="tag t-xam">${c.viec.mo} việc mở</span>` : ''}</span></div>${c.bo.map(b => `<div style="margin-top:8px"><div class="nho" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><b style="font-weight:600;color:var(--chu)">${esc(b.loai)}</b><span class="tag ${b.dau ? 't-vang' : 't-xam'}">${b.dau ? 'dấu ' + esc(b.dau) : 'dấu KTC'}</span>${treBo(b) ? '<span class="tag t-huy">trễ</span>' : ''}</div>${mocThanh(b.moc)}<div class="nho">${duBaoChu(b.du_bao)}</div></div>`).join('')}</a>`).join('') ||
       `<div class="the rong">${co.length ? 'Không có công trình nào trong nhóm này' : 'Chưa công trình nào được gắn mốc giai đoạn'}</div>`;
   };
   document.querySelectorAll('#tdTab button').forEach(b => b.onclick = () => { TDLOC = b.dataset.t; ve(); });
@@ -1329,7 +1351,7 @@ TRANG['#/tien-do'] = async nd => {
 };
 
 function ganTatCa() {
-  const loai = $('#tdLoaiAll').value, ds = CACHE.td.ct.filter(c => !c.moc.length).map(c => c.ma);
+  const loai = $('#tdLoaiAll').value, ds = CACHE.td.ct.filter(c => !(c.bo || []).length).map(c => c.ma);
   if (!ds.length || !confirm('Gắn bộ mốc “' + loai + '” cho ' + ds.length + ' công trình chưa có mốc?')) return;
   ghiRoiTai('ganMocNhieu', { ds, loai }, '', 'Đã gắn mốc cho ' + ds.length + ' công trình').catch(() => {});
 }
@@ -1337,7 +1359,8 @@ function ganTatCa() {
 /* ---------- trang Hiệu suất ---------- */
 TRANG['#/hieu-suat'] = async nd => {
   const [d, td] = await Promise.all([goi('hieuSuat'), goi('tienDo')]), t = d.tong, max = Math.max(1, ...d.nguoi.map(n => n.mo));
-  const db = td.ct.filter(c => c.du_bao && c.du_bao.du_bao && c.du_bao.xong < c.du_bao.tong).sort((a, b) => (b.du_bao.lech || 0) - (a.du_bao.lech || 0));
+  const db = td.ct.flatMap(c => (c.bo || []).map(b => ({ ma: c.ma, ten: c.ten + (c.bo.length > 1 ? ' · ' + b.loai : ''), du_bao: b.du_bao })))
+    .filter(c => c.du_bao && c.du_bao.du_bao && c.du_bao.xong < c.du_bao.tong).sort((a, b) => (b.du_bao.lech || 0) - (a.du_bao.lech || 0));
   nd.innerHTML = tieuDe('Hiệu suất', d.tat_ca ? `Khối lượng việc và tỷ lệ đúng hạn từng người · tính lúc ${esc(d.luc)}` : 'Số liệu của riêng anh/chị') +
     `<div class="luoi"><div class="kpi"><div class="nhan">Việc đang mở</div><div class="so">${t.mo}</div><div class="them">${t.sap} việc tới hạn trong 7 ngày</div></div>
       <div class="kpi ${t.tre ? 'do' : 'xanh'}"><div class="nhan">Quá hạn</div><div class="so">${t.tre}</div></div>
@@ -1409,7 +1432,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.7.2 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.7.3 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
