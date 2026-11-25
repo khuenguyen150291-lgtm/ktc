@@ -139,7 +139,7 @@ a.canh{text-decoration:none}
   .hai>div{display:contents}.hai .uu{order:-1}.hai .cuoi{order:1}
 }
 .pc-vai{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px 14px;margin-top:10px}.pc-vai label{display:flex;gap:7px;align-items:center;font-size:13px;cursor:pointer;min-width:0}.pc-vai input{width:auto;flex:none;margin:0}.pc-vai label.da{color:var(--phu);cursor:default}.pc-vai span{overflow-wrap:anywhere}
-.kp-dau{display:flex;justify-content:space-between;align-items:baseline;gap:6px 12px;flex-wrap:wrap}.kp-dau h3{margin:0}.kp-so{display:flex;gap:4px 16px;flex-wrap:wrap;font-size:13.5px;margin-top:6px}.kp-so b{font-weight:600}
+.kpi.du-kien .so{font-style:italic;opacity:.85}.kp-dau{display:flex;justify-content:space-between;align-items:baseline;gap:6px 12px;flex-wrap:wrap}.kp-dau h3{margin:0}.kp-so{display:flex;gap:4px 16px;flex-wrap:wrap;font-size:13.5px;margin-top:6px}.kp-so b{font-weight:600}
 </style>
 </head>
 <body>
@@ -473,13 +473,17 @@ TRANG['#/ct'] = async (nd, q) => {
       `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${tag(x.trang_thai)}${nhanPL(x)}${x.zalo ? `<a class="nut phu" href="${esc(x.zalo)}" target="_blank" rel="noopener" style="text-decoration:none" onclick="moZalo(event,this.href)">Nhóm Zalo</a>` : ''}${x.thu_muc_id ? `<a class="nut vang" href="https://drive.google.com/drive/folders/${x.thu_muc_id}" target="_blank" style="text-decoration:none">${ic('mo', 'width:16px;height:16px')}Thư mục hồ sơ</a>` : '<span class="tag t-xam">Chưa có thư mục Drive</span>'}</div>`);
   if (x.tien) {
     const t = x.tien;
-    const th = x.thue && x.thue.nguoi && x.thue.nguoi.length ? x.thue : null, ex = +t.thue_nguoi || 0;      // 0.7.14: Thuê người lấy theo bảng KPI nếu có
-    const ghiThue = th ? 'theo bảng KPI' + (ex && Math.abs(ex - th.tong) >= 1 ? ' · Excel ghi ' + vnd(ex) : '') : '';
-    const ghiCon = th && t.con_lai != null && t.con_lai !== '' && th.tong > ex ? 'Trừ thêm KPI: còn ' + vnd(t.con_lai - (th.tong - ex)) : '';
-    h += '<div class="luoi">' + [['Giá trị nhận', t.gt_nhan, ''], ['Chi A', t.chi_a, 'toi'], ['Thuê người', th ? th.tong : t.thue_nguoi, 'toi', ghiThue], ['Còn lại về công ty', t.con_lai, 'xanh', ghiCon]]
+    const th = x.thue && x.thue.nguoi && x.thue.nguoi.length ? x.thue : null, ex = +t.thue_nguoi || 0, dk = x.du_kien || {};      // 0.7.15: thực tế (Excel) hoặc dự kiến
+    const ghiThue = th ? (th.du_kien ? `thực tế ${vnd(th.tong)} · dự kiến ${vnd(th.du_kien)}` : 'theo bảng KPI') + (ex && Math.abs(ex - th.tong) >= 1 ? ' · Excel ghi ' + vnd(ex) : '') : '';
+    const nhan = +t.gt_nhan ? [+t.gt_nhan, 'thực tế'] : dk.gt_nhan ? [dk.gt_nhan.so, 'dự kiến · ' + (/TMĐT/.test(dk.gt_nhan.cach) ? 'suy từ TMĐT' : 'tổng phí Excel')] : [0, 'chưa có số'];
+    const con = +t.con_lai ? [+t.con_lai, 'thực tế'] : dk.con_lai ? [dk.con_lai.so, 'dự kiến' + (dk.con_lai.chua_thue ? ' · chưa trừ thuế' : '')] : [0, 'chưa có số'];
+    h += '<div class="luoi">' + [['Giá trị nhận', nhan[0], dk.gt_nhan && !+t.gt_nhan ? 'du-kien' : '', nhan[1]], ['Chi A', t.chi_a, 'toi'], ['Thuê người', th ? th.tong + (th.du_kien || 0) : t.thue_nguoi, 'toi', ghiThue], ['Còn lại về công ty', con[0], 'xanh' + (dk.con_lai && !+t.con_lai ? ' du-kien' : ''), con[1]]]
       .filter(k => k[1] != null && k[1] !== '').map(k => `<div class="kpi ${k[2]}"><div class="nhan">${k[0]}</div><div class="so">${vnd(k[1])}</div>${k[3] ? `<div class="them">${esc(k[3])}</div>` : ''}</div>`).join('') + '</div>';
+    if (dk.gt_nhan && !+t.gt_nhan) h += `<p class="nho" style="margin:-4px 0 6px">Giá trị nhận dự kiến: ${esc(dk.gt_nhan.cach)}.</p>`;
+    if (dk.con_lai && !+t.con_lai) { const c = dk.con_lai.cac_khoan; h += `<p class="nho" style="margin:-2px 0 12px">Còn lại dự kiến = giá trị nhận ${vnd(c.gt_nhan)} − chi A ${vnd(c.chi_a)} − thuê người ${vnd(c.thue_nguoi)} − thuế ${vnd(c.tndn + c.vat)} − chi phí khác ${vnd(c.chi_khac)} (phong bì, ký hợp đồng… trong sổ chi)${dk.con_lai.chua_thue ? '. Excel chưa có số thuế nên chưa trừ thuế' : ''}. Có số ở Excel thì app bỏ số dự kiến.</p>`; }
   }
   if (x.thue) h += theThue(x.thue);
+  if (x.chi_khac && x.chi_khac.dong.length) h += `<div class="the"><h3>Chi phí khác của công trình<span class="nho">sổ chi · ${vnd(x.chi_khac.tong)}</span></h3>${x.chi_khac.dong.map(c => `<div class="dong"><div class="chinh">${esc(c.noi_dung)}<div class="nho">${esc(ngay(c.ngay))}${c.nguoi_chi ? ' · ' + esc(c.nguoi_chi) : ''}</div></div><b>${vnd(c.tien)}</b></div>`).join('')}<p class="nho" style="margin:8px 0 0">Dòng sổ chi có tên công trình (phong bì, ký hợp đồng, tiếp khách…), không gồm chi A và KPI. Trừ vào Còn lại dự kiến khi Excel chưa có số thực tế.</p></div>`;
   h += '<div class="hai"><div>';
   if (x.moc) h += ctDot3Trai(x);
   h += theTD(x);
@@ -716,7 +720,7 @@ TRANG['#/danh-ba'] = async nd => {
   const ds = CACHE.db = await goi('danhBa'), sua = ME.quyen.danhba > 1;
   const nhom = [...new Set(ds.map(n => n.vai_tro || 'Khác'))];
   nd.innerHTML = tieuDe('Danh bạ', `${ds.length} người · bấm vào tên để xem chi tiết`, sua ? `<button class="nut vang" style="flex:none" onclick="$('#dbForm').classList.toggle('an')">+ Thêm người</button>` : '') +
-    (sua ? `<div class="the an" id="dbForm"><h3>Thêm người</h3><div class="hang"><div style="flex:2"><label>Họ tên</label><input id="dbTen"></div><div><label>Vai trò</label><select id="dbVai"><option>Cộng tác viên</option><option>Nhân viên</option><option>Chủ đầu tư</option><option>Đối tác</option></select></div></div>
+    (sua ? `<div class="the an" id="dbForm"><h3>Thêm người</h3><div class="hang"><div style="flex:2"><label>Họ tên đầy đủ</label><input id="dbTen" placeholder="vd Nguyễn Hoa Ban"></div><div><label>Vai trò</label><select id="dbVai"><option>Cộng tác viên</option><option>Nhân viên</option><option>Chủ đầu tư</option><option>Đối tác</option></select></div></div>
       <div class="hang"><div><label>SĐT/Zalo</label><input id="dbSDT" inputmode="tel"></div><div><label>Gmail</label><input id="dbMail" type="email"></div></div><p style="margin:14px 0 0"><button class="nut" onclick="luuDB()">Thêm</button></p></div>` : '') +
     `<div class="the" style="padding:12px 14px"><div class="hang"><input id="dbTim" placeholder="Tìm tên, số điện thoại…" style="flex:3"><select id="dbLoc"><option value="">Tất cả (${ds.length})</option>${nhom.map(v => `<option>${esc(v)}</option>`).join('')}</select></div></div><div id="dbDS"></div>`;
   const ve = () => {
@@ -726,7 +730,8 @@ TRANG['#/danh-ba'] = async nd => {
   };
   $('#dbTim').oninput = ve; $('#dbLoc').onchange = ve; ve();
 };
-async function luuDB() { await ghi('luuDanhBa', { ten: $('#dbTen').value, vai_tro: $('#dbVai').value, sdt: $('#dbSDT').value, gmail: $('#dbMail').value }, 'Đã thêm'); }
+function tenThieu(t) { t = String(t || '').trim(); return t.split(/\s+/).length < 2 || /^(a|anh|e|em|chị|c|cô|chú|bác)\s/i.test(t); }
+async function luuDB() { const ten = $('#dbTen').value; await ghi('luuDanhBa', { ten, vai_tro: $('#dbVai').value, sdt: $('#dbSDT').value, gmail: $('#dbMail').value }, tenThieu(ten) ? null : 'Đã thêm'); if (tenThieu(ten)) bao('Đã thêm. Nên sửa lại thành họ tên đầy đủ (vd Nguyễn Hoa Ban): app khớp bảng KPI, sổ chi theo họ tên', 7000); }
 
 /* ---------- Chi tiết một người ---------- */
 TRANG['#/nguoi'] = async (nd, q) => {
@@ -945,12 +950,12 @@ const fmtPt = v => String(v).trim().replace(/\./g, ',') + (/%/.test(String(v)) ?
 function theThue(th) {        // 0.7.14: trang công trình, mục Thuê người: tổng + từng người (vai phân công, % nhận, số tiền)
   if (th.chua_doc) return `<div class="the"><h3>Thuê người</h3><p class="nho" style="margin:0">Chưa đọc các bảng "Công việc, tiến độ". Mở trang <a href="#/chi-tra-kpi">Chi trả KPI</a> để đọc.</p></div>`;
   const adm = th.xem_het, ds = th.nguoi || [], luc = String(th.luc || '');
-  const dong = ds.map(g => `<tr><td data-n="Người" style="min-width:150px"><div>${g.ma_nguoi && adm ? `<a href="#/nguoi?ma=${encodeURIComponent(g.ma_nguoi)}">${esc(g.ten)}</a>` : esc(g.ten)}${g.vai && g.vai.length ? `<div class="nho">${esc(g.vai.join(', '))}</div>` : (adm && !g.ma_nguoi ? `<div class="nho">bảng "${esc(g.bang)}" chưa khớp Danh bạ</div>` : '')}</div></td><td data-n="Việc">${esc(g.viec || '')}</td>${adm ? `<td class="r" data-n="% nhận">${g.pt != null ? fmtPt(g.pt) + (g.tt && g.tt.pt && parseFloat(String(g.tt.pt).replace(',', '.')) !== g.pt ? `<div class="nho">thỏa thuận ${esc(fmtPt(g.tt.pt))}</div>` : '') : g.tt && g.tt.pt ? esc(fmtPt(g.tt.pt)) + '<div class="nho">theo thỏa thuận</div>' : '<span class="nho">chưa có giá trị HĐ</span>'}</td>` : ''}<td class="r" data-n="Số tiền"><b style="font-weight:500">${g.kpi ? vnd(g.kpi) : (g.chu && g.chu.length ? esc(g.chu.join(', ')) : '<span class="nho">chưa có số</span>')}</b></td></tr>`).join('');
+  const dong = ds.map(g => `<tr><td data-n="Người" style="min-width:150px"><div>${g.ma_nguoi && adm ? `<a href="#/nguoi?ma=${encodeURIComponent(g.ma_nguoi)}">${esc(g.ten)}</a>` : esc(g.ten)}${g.vai && g.vai.length ? `<div class="nho">${esc(g.vai.join(', '))}</div>` : (adm && !g.ma_nguoi ? `<div class="nho">bảng "${esc(g.bang)}" chưa khớp Danh bạ</div>` : '')}</div></td><td data-n="Việc">${esc(g.viec || '')}</td>${adm ? `<td class="r" data-n="% nhận">${g.pt != null ? fmtPt(g.pt) + (g.tt && g.tt.pt && parseFloat(String(g.tt.pt).replace(',', '.')) !== g.pt ? `<div class="nho">thỏa thuận ${esc(fmtPt(g.tt.pt))}</div>` : '') : g.tt && g.tt.pt ? esc(fmtPt(g.tt.pt)) + '<div class="nho">theo thỏa thuận</div>' : '<span class="nho">chưa có giá trị HĐ</span>'}</td>` : ''}<td class="r" data-n="Số tiền">${g.kpi ? `<b style="font-weight:500">${vnd(g.kpi)}</b>${adm ? '<div class="nho">thực tế</div>' : ''}` : g.du_kien ? `<b style="font-weight:500;font-style:italic">${vnd(g.du_kien.so)}</b><div class="nho">dự kiến: ${esc(fmtPt(g.du_kien.pt))} × ${vnd(g.du_kien.co_so)} (${esc(g.du_kien.nguon)})</div>` : (g.chu && g.chu.length ? esc(g.chu.join(', ')) : '<span class="nho">chưa có số</span>')}</td></tr>`).join('');
   return `<div class="the"><h3>${adm ? 'Thuê người' : 'KPI của anh/chị ở công trình này'}<a class="nho" href="#/chi-tra-kpi">Chi trả KPI →</a></h3>
-    ${adm ? `<div class="kp-so" style="margin:0 0 8px"><span>Tổng <b>${vnd(th.tong)}</b></span><span>${ds.length} người có số KPI</span></div>` : ''}
+    ${adm ? `<div class="kp-so" style="margin:0 0 8px"><span>Tổng <b>${vnd(th.tong + (th.du_kien || 0))}</b></span>${th.du_kien ? `<span>thực tế ${vnd(th.tong)} · dự kiến ${vnd(th.du_kien)}</span>` : ''}<span>${ds.length} người tham gia</span></div>` : ''}
     ${ds.length ? `<div class="cuon"><table class="bang co-the"><thead><tr><th>Người</th><th>Việc</th>${adm ? '<th class="r">% nhận</th>' : ''}<th class="r">Số tiền</th></tr></thead><tbody>${dong}</tbody></table></div>` : ''}
-    ${adm && th.chua_kpi && th.chua_kpi.length ? `<p class="nho" style="margin:8px 0 0">Đã phân công, chưa có số KPI: ${th.chua_kpi.map(p => esc(p.ten) + (p.vai && p.vai.length ? ' (' + esc(p.vai.join(', ')) + ')' : '')).join('; ')}</p>` : ''}
-    ${adm ? `<p class="nho" style="margin:6px 0 0">Đọc từ bảng "Công việc, tiến độ" của từng người lúc ${esc(ngay(luc.slice(0, 10)) + ' ' + luc.slice(11))}. % nhận = số tiền ÷ giá trị công việc theo hợp đồng ghi trong bảng; bảng chưa ghi giá trị thì lấy % thỏa thuận ở trang Đối tác.</p>` : ''}</div>`;
+    ${adm && th.chua_kpi && th.chua_kpi.length ? `<p class="nho" style="margin:8px 0 0">Đã phân công, chưa có số KPI và chưa có % thống nhất: ${th.chua_kpi.map(p => esc(p.ten) + (p.vai && p.vai.length ? ' (' + esc(p.vai.join(', ')) + ')' : '')).join('; ')}</p>` : ''}
+    ${adm ? `<p class="nho" style="margin:6px 0 0">Đọc từ bảng "Công việc, tiến độ" của từng người lúc ${esc(ngay(luc.slice(0, 10)) + ' ' + luc.slice(11))}. % nhận = số tiền ÷ giá trị công việc theo hợp đồng ghi trong bảng; bảng chưa ghi giá trị thì lấy % thỏa thuận ở trang Đối tác. Chưa có số tiền thì dự kiến = % thống nhất × giá trị HĐ (bảng KPI, không có thì phí Excel đúng loại việc).</p>` : ''}</div>`;
 }
 function kpiKhoi(b, adm, mo, tieu) {
   const ten = esc(b.ten_db || b.ten), tenA = adm && b.ma_nguoi ? `<a href="#/nguoi?ma=${encodeURIComponent(b.ma_nguoi)}">${ten}</a>` : ten;
@@ -1672,7 +1677,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.7.14 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.7.15 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
