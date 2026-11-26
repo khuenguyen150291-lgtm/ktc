@@ -69,7 +69,7 @@ label{display:block;font-size:12.5px;color:var(--phu);font-weight:500;margin:10p
 .rong{color:var(--phu);text-align:center;padding:24px 8px}
 .bieu{width:100%;height:auto}.bieu text{font-size:11px;fill:var(--phu)}
 .chu-giai{display:flex;gap:14px;font-size:12.5px;color:var(--phu)}.chu-giai i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-.tab{display:inline-flex;background:#f2f4f7;border-radius:9px;padding:3px;gap:2px}.tab button{border:0;background:none;padding:6px 12px;border-radius:7px;font-weight:600;color:var(--phu);cursor:pointer}.tab button.on{background:#fff;color:var(--chu);box-shadow:var(--bong)}
+.tab{display:inline-flex;flex-wrap:wrap;max-width:100%;background:#f2f4f7;border-radius:9px;padding:3px;gap:2px}.tab button{border:0;background:none;padding:6px 12px;border-radius:7px;font-weight:600;color:var(--phu);cursor:pointer}.tab button.on{background:#fff;color:var(--chu);box-shadow:var(--bong)}
 #dangnhap{max-width:420px;margin:12vh auto;text-align:center}
 #dangnhap img{width:96px;height:96px}
 #thongbao{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--toi);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;display:none;z-index:20;max-width:90vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
@@ -98,6 +98,8 @@ label{display:block;font-size:12.5px;color:var(--phu);font-weight:500;margin:10p
   .bang.ds-ct td.ten{order:-3;flex:1 1 0;font-size:15px;line-height:1.45;color:var(--chu)}.bang.ds-ct td.ten .tag{margin:2px 0}
   .bang.ds-ct td.tt{order:-2;align-self:flex-start;margin-top:1px}.bang.ds-ct tr:after{content:'';order:-1;flex:1 1 100%;height:0;margin-top:-4px}.bang.ds-ct td:empty{display:none}.bang.ds-ct td.rong{flex:1 1 100%;text-align:center}
   #timCT{flex:1 1 100%!important}
+  main .pc-vai{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #plXem .tag,.tieude .tag{white-space:normal;border-radius:12px;overflow-wrap:anywhere}
 }
 #sheet{position:fixed;inset:0;background:rgba(16,24,40,.45);z-index:15;display:none;align-items:flex-end}
 #sheet>div{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
@@ -475,11 +477,11 @@ TRANG['#/ct'] = async (nd, q) => {
     const t = x.tien;
     const th = x.thue && x.thue.nguoi && x.thue.nguoi.length ? x.thue : null, ex = +t.thue_nguoi || 0, dk = x.du_kien || {};      // 0.7.15: thực tế (Excel) hoặc dự kiến
     const ghiThue = th ? (th.du_kien ? `thực tế ${vnd(th.tong)} · dự kiến ${vnd(th.du_kien)}` : 'theo bảng KPI') + (ex && Math.abs(ex - th.tong) >= 1 ? ' · Excel ghi ' + vnd(ex) : '') : '';
-    const nhan = +t.gt_nhan ? [+t.gt_nhan, 'thực tế'] : dk.gt_nhan ? [dk.gt_nhan.so, 'dự kiến · ' + (/TMĐT/.test(dk.gt_nhan.cach) ? 'suy từ TMĐT' : 'tổng phí Excel')] : [0, 'chưa có số'];
+    const nhan = +t.gt_nhan ? [+t.gt_nhan, 'thực tế'] : dk.gt_nhan ? [dk.gt_nhan.so, 'dự kiến · ' + (dk.gt_nhan.so_thu ? 'theo sổ thu' : /TMĐT/.test(dk.gt_nhan.cach) ? 'suy từ TMĐT' : 'tổng phí Excel')] : [0, 'chưa có số'];
     const con = +t.con_lai ? [+t.con_lai, 'thực tế'] : dk.con_lai ? [dk.con_lai.so, 'dự kiến' + (dk.con_lai.chua_thue ? ' · chưa trừ thuế' : '')] : [0, 'chưa có số'];
     h += '<div class="luoi">' + [['Giá trị nhận', nhan[0], dk.gt_nhan && !+t.gt_nhan ? 'du-kien' : '', nhan[1]], ['Chi A', t.chi_a, 'toi'], ['Thuê người', th ? th.tong + (th.du_kien || 0) : t.thue_nguoi, 'toi', ghiThue], ['Còn lại về công ty', con[0], 'xanh' + (dk.con_lai && !+t.con_lai ? ' du-kien' : ''), con[1]]]
       .filter(k => k[1] != null && k[1] !== '').map(k => `<div class="kpi ${k[2]}"><div class="nhan">${k[0]}</div><div class="so">${vnd(k[1])}</div>${k[3] ? `<div class="them">${esc(k[3])}</div>` : ''}</div>`).join('') + '</div>';
-    if (dk.gt_nhan && !+t.gt_nhan) h += `<p class="nho" style="margin:-4px 0 6px">Giá trị nhận dự kiến: ${esc(dk.gt_nhan.cach)}.</p>`;
+    if (dk.gt_nhan && !+t.gt_nhan) h += `<p class="nho" style="margin:-4px 0 6px">Giá trị nhận dự kiến: ${dk.gt_nhan.so_thu ? `theo sổ thu, đã thu ${vnd(dk.gt_nhan.da_thu)} + còn phải thu ${vnd(dk.gt_nhan.con_thu)} (Excel Danh sách công trình chưa ghi phí, chưa ghi TMĐT)` : esc(dk.gt_nhan.cach)}.</p>`;
     if (dk.con_lai && !+t.con_lai) { const c = dk.con_lai.cac_khoan; h += `<p class="nho" style="margin:-2px 0 12px">Còn lại dự kiến = giá trị nhận ${vnd(c.gt_nhan)} − chi A ${vnd(c.chi_a)} − thuê người ${vnd(c.thue_nguoi)} − thuế ${vnd(c.tndn + c.vat)} − chi phí khác ${vnd(c.chi_khac)} (phong bì, ký hợp đồng… trong sổ chi)${dk.con_lai.chua_thue ? '. Excel chưa có số thuế nên chưa trừ thuế' : ''}. Có số ở Excel thì app bỏ số dự kiến.</p>`; }
   }
   if (x.thue) h += theThue(x.thue);
@@ -922,8 +924,24 @@ function khungPL(x) {
     <div class="hang" style="margin-top:12px;align-items:center"><button class="nut" id="plLuu" style="flex:none" onclick="luuPL('${x.ma}')">Lưu phân loại</button>
       <span class="nho" id="plXem" style="flex:3">${nhanPL(x) || 'Chưa có nhãn nào.'}</span></div>
     <hr style="border:0;border-top:1px solid var(--vien);margin:14px 0 10px">
+    <label>Mối (người, đơn vị giới thiệu)</label>
+    <div class="hang" style="align-items:center"><input id="plMoi" maxlength="120" style="flex:3;min-width:160px" value="${esc(x.moi_excel || x.moi_app || '')}" ${x.moi_excel ? 'disabled' : ''} placeholder="Ví dụ: anh Thanh, Cty C.C.I">
+      <button class="nut phu" id="plMoiLuu" style="flex:none" ${x.moi_excel ? 'disabled' : ''} onclick="luuMoi('${x.ma}')">Lưu mối</button></div>
+    <p class="nho" style="margin:6px 0 0">${x.moi_excel ? 'Mối này lấy từ Excel Danh sách công trình (cột E). Muốn đổi thì sửa ở Excel, app tự đọc lại.' : 'Excel chưa ghi mối cho công trình này nên app dùng ô này. Sau này Excel có mối thì app hiện theo Excel.'} Nhân viên không thấy mối.</p>
+    <hr style="border:0;border-top:1px solid var(--vien);margin:14px 0 10px">
     <p class="nho" style="margin:0 0 8px"><b>Xóa công trình:</b> ẩn công trình này khỏi app với mọi người (kèm mốc, việc, phân công của nó). Excel, thư mục Drive và sổ thu chi không bị đụng tới. Khôi phục lại được ở cuối trang Công trình.</p>
     <button class="nut phu" style="color:#b42318" onclick="xoaCT('${x.ma}')">Xóa công trình này khỏi app</button></div>`;
+}
+async function luuMoi(ma) {
+  const x = CACHE.ctDang; if (!x || x.ma !== ma) return;
+  const n = $('#plMoiLuu'); n.disabled = true; bao('Đang lưu mối…', 30000);
+  try {
+    const r = await goi('luuMoi', { ma, moi: $('#plMoi').value });
+    CACHE.ct = null; CACHE.ctDang = null;
+    try { ['congTrinh', 'trangChu', 'doiTac'].forEach(a => localStorage.removeItem(khoaLuu(a))); } catch (e) {}
+    bao(r && r.doi === false ? 'Mối không đổi.' : 'Đã lưu mối.', 4000);
+    dinhTuyen(true);
+  } catch (e) { bao(e.message, 7000); n.disabled = false; }
 }
 function doiPL() {
   const k = $('#plDau').value;
@@ -1666,7 +1684,7 @@ TRANG['#/he-thong'] = async nd => {
     <div class="hai"><div class="the"><h3>Thao tác nặng nhất</h3><table class="bang"><thead><tr><th>Thao tác</th><th class="r">Lượt</th><th class="r">TB</th><th class="r">Lâu nhất</th></tr></thead><tbody>${d.api.map(a => `<tr><td>${esc(a.ten)}</td><td class="r">${a.luot}</td><td class="r">${a.tb} ms</td><td class="r">${a.max} ms</td></tr>`).join('') || '<tr><td colspan="4" class="rong">Chưa có số đo</td></tr>'}</tbody></table><p class="nho" style="margin:8px 0 0">Thời gian máy xử lý, chưa gồm đường truyền.</p></div>
       <div><div class="the"><h3>Kích thước dữ liệu</h3>${d.bang.slice().sort((a, b) => b.dong - a.dong).slice(0, 10).map(b => `<div class="dong" style="cursor:default"><span>${esc(b.ten)}</span><b${b.dong > 5000 ? ' style="color:#b42318"' : ''}>${b.dong.toLocaleString('vi-VN')} dòng</b></div>`).join('')}${d.excel ? `<p class="nho" style="margin:8px 0 0">Sổ Excel đọc lúc ${esc(d.excel.luc)}: ${d.excel.thu} dòng thu, ${d.excel.chi} dòng chi, ${d.excel.ct} công trình, ${d.excel.vp} khoản văn phòng.</p>` : ''}</div>
       <div class="the"><h3>Tự kiểm</h3><div class="dong" style="cursor:default"><span>Khóa chống ghi đè</span><b>${esc(d.tu_kiem.khoa)}</b></div><div class="dong" style="cursor:default"><span>Bộ nhớ đệm</span><b>${esc(d.tu_kiem.dem)}</b></div><div class="dong" style="cursor:default"><span>Phiên bản máy xử lý</span><b>${esc(d.tu_kiem.phien_ban)}</b></div></div></div></div>
-    <div class="the"><h3>Ai đã xem mục tài chính (14 ngày gần nhất)</h3><p class="nho" style="margin-top:-6px">Ghi theo giờ. Lượt đăng nhập bị từ chối hôm nay: <b>${esc(d.tu_choi || 0)}</b>.</p><table class="bang"><thead><tr><th>Giờ</th><th>Người</th><th>Mục</th><th class="r">Lượt</th></tr></thead><tbody>${(d.xem || []).map(x => `<tr><td data-n="Giờ">${esc(String(x.gio).slice(8, 10) + '/' + String(x.gio).slice(5, 7) + ' ' + String(x.gio).slice(11, 16))}</td><td data-n="Người">${esc(x.email)}</td><td data-n="Mục">${esc(({ thuChi: 'Thu chi', congNo: 'Công nợ', bangLuong: 'Bảng lương', heSo: 'Hệ số', vanPhong: 'Văn phòng' })[x.muc] || x.muc)}</td><td class="r" data-n="Lượt">${esc(x.n)}</td></tr>`).join('') || '<tr><td colspan="4" class="rong">Chưa có lượt xem nào được ghi</td></tr>'}</tbody></table></div>
+    <div class="the"><h3>Ai đã xem mục tài chính (14 ngày gần nhất)</h3><p class="nho" style="margin-top:-6px">Ghi theo giờ. Lượt đăng nhập bị từ chối hôm nay: <b>${esc(d.tu_choi || 0)}</b>.</p><table class="bang co-the"><thead><tr><th>Giờ</th><th>Người</th><th>Mục</th><th class="r">Lượt</th></tr></thead><tbody>${(d.xem || []).map(x => `<tr><td data-n="Giờ">${esc(String(x.gio).slice(8, 10) + '/' + String(x.gio).slice(5, 7) + ' ' + String(x.gio).slice(11, 16))}</td><td data-n="Người">${esc(x.email)}</td><td data-n="Mục">${esc(({ thuChi: 'Thu chi', congNo: 'Công nợ', bangLuong: 'Bảng lương', heSo: 'Hệ số', vanPhong: 'Văn phòng' })[x.muc] || x.muc)}</td><td class="r" data-n="Lượt">${esc(x.n)}</td></tr>`).join('') || '<tr><td colspan="4" class="rong">Chưa có lượt xem nào được ghi</td></tr>'}</tbody></table></div>
     <div class="the nho"><b>Ngưỡng kiến nghị</b> (ghi trong tài liệu Lộ trình, Đợt 9). Nên nâng lên database khi có một trong các dấu hiệu: từ 3 ngày trong 7 ngày người dùng chờ trung bình trên 3 giây; từ 15 người dùng trong cùng 1 giờ; từ 3 lỗi hạn mức của Google; từ 10 lần phải chờ vì nhiều người lưu cùng lúc. Chạm một nửa các ngưỡng này thì app báo “Theo dõi sát”.</div>`;
   $('#htLamMoi').onclick = async () => { await ghi('lamMoi', {}, 'Đã làm mới. Số liệu các trang sẽ đọc lại từ bảng.'); };
 };
@@ -1677,7 +1695,7 @@ TRANG['#/cai-dat'] = async nd => {
   <div class="the"><h3>Cài app lên máy</h3><p class="nho" style="margin:0">Điện thoại: mở trang này bằng Chrome (Android) hoặc Safari (iPhone) → menu → <b>Thêm vào màn hình chính</b>. Máy tính: Chrome → biểu tượng cài đặt trên thanh địa chỉ.</p></div>
   <div class="the"><h3>Tài khoản</h3><p class="nho" style="margin-top:-6px">Đăng xuất sẽ xóa số liệu đang lưu sẵn trên máy này. Dùng khi cho mượn máy hoặc đổi máy.</p><button class="nut phu" id="nutDX2">Đăng xuất</button></div>
   <div class="the"><h3>Tình trạng hệ thống</h3><p class="nho" style="margin-top:-6px">Thời gian tải, số người dùng, lỗi và kiến nghị nâng cấp.</p><a class="nut phu" href="#/he-thong" style="text-decoration:none">Mở trang Hệ thống</a></div>
-  <div class="the nho">Giao diện phiên bản 0.7.15 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
+  <div class="the nho">Giao diện phiên bản 0.7.16 · máy xử lý phiên bản ${esc(ME.phien_ban || '?')}</div>`;
   $('#nutDX2').onclick = dangXuat;
   $('#nutDB').onclick = async () => { $('#nutDB').disabled = true; bao('Đang đọc…', 60000); try { bao(await goi('dongBoNgay')); } finally { $('#nutDB').disabled = false; } };
 };
